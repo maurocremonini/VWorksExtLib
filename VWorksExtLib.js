@@ -1,5 +1,5 @@
 // VWorksExtLib follows
-// Mauro A. Cremonini - Agilent (Last update October 30th, 2023)
+// Mauro A. Cremonini - Agilent Technologies
 // see credits in the code
 
 // ======================== FUNCTIONS FOR ARRAYS ===============================
@@ -816,6 +816,12 @@ function calcMultiDispenseCycles (o) {
 // end of VWorksExtLib.js
 print("*** VWorksExtLib.js successfully loaded ***")
 
-// finally load public domain JSON library
-open("C:/VWorks Workspace/VWorksExtLib/json2.js")
-print("*** Public domain json2.js successfully loaded ***")
+// finally load public domain JSON library (VWorks version)
++function() {
+	var JSONLib = "C:/VWorks Workspace/VWorksExtLib/json2_VWorks.js"
+	var f = new File()
+	if (f.Exists(JSONLib)) {
+		open(JSONLib)
+		print("*** Public domain json2.js successfully loaded ***")	
+	}	
+}()
