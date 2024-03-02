@@ -818,7 +818,7 @@ print("*** VWorksExtLib.js successfully loaded ***")
 
 // finally load public domain JSON library (VWorks version)
 +function() {
-	var JSONLib = "C:/VWorks Workspace/VWorksExtLib/json2_VWorks.js"
+	var JSONLib = "C:/VWorks Workspace/VWorksExtLib/json2.js"
 	var f = new File()
 	if (f.Exists(JSONLib)) {
 		open(JSONLib)
