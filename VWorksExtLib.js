@@ -602,9 +602,10 @@ function errorFactory () {
 	var _error = false, _errorOld = false
 	var _errorText = "", _errorTextOld = ""
 	var myError = {}
-	myError.set = function (value) {
+	myError.set = function (value, text) {
 		_errorOld = _error
 		_error = _error || !!value
+		if (value && text) this.setText(text) 
 	}
 	myError.setText = function (text) {
 		if (!text) return
@@ -755,6 +756,14 @@ function wellselectionToWell (ws) {
 	return string+col 
 }
 
+// This function is used to send a message to a Telegram bot. 
+// It needs an ancillary powershell scripts called "telegram_bot.ps1" in 
+// c:\vworks workspace\vworksextlib\scripts\
+// If no token or chatID is provided then the powershell script
+// will be passed only the text (and in this case the defaults in the powershell script will be used)
+function sendToTelegram (token, chatID, text) {
+	//TBD
+}
 
 // This function can be used to capture a message and have Windows "say" it
 // using either powershell or the older "Sapi.SpVoice" Windows COM object
