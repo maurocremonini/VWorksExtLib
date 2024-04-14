@@ -761,9 +761,26 @@ function wellselectionToWell (ws) {
 // c:\vworks workspace\vworksextlib\scripts\
 // If no token or chatID is provided then the powershell script
 // will be passed only the text (and in this case the defaults in the powershell script will be used)
-function sendToTelegram (token, chatID, text) {
-	//TBD
+function sendToTelegramBot (text, psScript, token, chatID) {
+	var psScript = psScript || "C:/VWorks Workspace/VWorksExtLib/Scripts/telegram_bot.ps1"
+	var cmdToken = token ? "-botToken " + token + " " : ""
+	var cmdChatID = chatID ? "-ChatID " + chatID + " " : ""
+	var commandLine = "cmd /c powershell -ExecutionPolicy Bypass -File \"" + psScript + "\" " + cmdToken + cmdChatID + text
+	print(commandLine)  
+	run(commandLine) 
 }
+
+function sendToTelegramBotInit (obj) {
+	var psScript = obj.psScript || "C:/VWorks Workspace/VWorksExtLib/Scripts/telegram_bot.ps1"
+	var cmdToken = obj.token ? "-Token " + obj.token + " " : ""
+	var cmdChatID = obj.chatID ? "-ChatID " + obj.chatID + " " : ""
+	var commandLine = "cmd /c powershell -ExecutionPolicy Bypass -File \"" + psScript + "\" " + cmdToken + cmdChatID
+	return function (text, debug) {
+		if (debug) print (commandLine + text)
+		run (commandLine + text)
+	}
+}
+
 
 // This function can be used to capture a message and have Windows "say" it
 // using either powershell or the older "Sapi.SpVoice" Windows COM object
