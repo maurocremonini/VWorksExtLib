@@ -591,6 +591,45 @@ function plateInfo (plateName) {
 	return resObj
 }
 
+// This function returns a time stamp in the format "YYYY-MM-DD hh:mm:ss"
+function getTimeStamp () {
+	//creating timestamp
+	var myDate = new Date()
+	var YYYY = myDate.getFullYear()
+	var MM = ("0"+(myDate.getMonth() + 1)).slice(-2)
+	var DD = ("0"+myDate.getDate()).slice(-2)
+	var hh = ("0"+myDate.getHours()).slice(-2)
+	var mm = ("0"+myDate.getMinutes()).slice(-2)
+	var ss = ("0"+myDate.getSeconds()).slice(-2)
+	return  [[YYYY,MM,DD].join("-"),[hh,mm,ss].join(":")].join(" ")
+ }
+
+// this function adds a line to a custom log file creating the path if not existent 
+// if fileOrTask is the task object then the output file is automatically set to
+// C:\VWorks Workspace\Outputs\<protocol name>_out.txt
+function customLog (txtLine, fileOrTask, overwrite) {
+	var fileName = "", f = new File()
+	if (typeof fileOrTask === "object") {
+		if (typeof fileOrTask.getProtocolName === "function") {
+			fileName = "C:/VWorks Workspace/Outputs/" + 
+				(fileOrTask.getProtocolName().replace(/\\/g,"/").split("/").pop()).split(".")[0] +
+				"_out.txt"
+		}
+		else {
+			print("customLog: no getProtocolName() method in passed object"); return
+		}
+	}
+	fileName = (fileName || fileOrTask).toString().replace(/\\/g,"/")
+	if (!fileName) {print("customLog: no fileName given"); return}
+	if (fileName.indexOf("/") === -1) {print("customLog: complete file path needed"); return}
+	var path = (fileName.split("/")).slice(0,-1).join("/")
+	if (!f.Exists(path)) run("cmd /c mkdir \"" + path + "\"" , true)
+	f.Open(fileName, overwrite)
+	f.Write(txtLine + "\n")
+	f.Close()
+	return true
+ }
+
 
 // This functions is useful when one needs to check several possible errors 
 // and return the total "OR"ed cumulative error at the end. _error will be placed in a closure. 
@@ -744,7 +783,7 @@ function indexToWellselection (index,mode,format) {
 
 // This function transform a wellselection ARRAY (not array of arrays) 
 // into a well address
-function wellselectionToWell (ws) {
+function wellselectionToWell (ws,pad) {
 	if (!ws) {
 		print("wellselectioToWell: no wellselection provided")
 		return false
@@ -753,7 +792,7 @@ function wellselectionToWell (ws) {
 	var col = ws[1]
 	var string = String.fromCharCode(65+(row-1)%26)
 	if (Math.floor((row-1)/26) > 0) string += string
-	return string+col 
+	return string+ ( "0000" + col).slice(-pad) 
 }
 
 // This function is used to send a message to a Telegram bot. 
