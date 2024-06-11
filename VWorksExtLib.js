@@ -463,7 +463,7 @@ function getWellselection2 (well,plateType) {
 	// 2023-01-23 v 1.0
 	//this version uses regexps for nearly all operations!
 	var filterSpaces = /[^A-Z0-9]/g
-	var filterType = /^(6|12|24|48|96|384|1536)$/
+	var filterType = /^(6|12|24|48|54|96|384|1536)$/
 	var filter2Letters = /^[A-Z]{2}/
 	var filter12Numbers = /[0-9]{1,2}$/
 	var checkWell = {6: /^[A-B]0?[1-3]$/,
@@ -481,9 +481,8 @@ function getWellselection2 (well,plateType) {
 	var well = well.toString().toUpperCase().replace(filterSpaces,'')
 	if(!checkWell[plateType].test(well)) {print("getWellselection: bad well address \"" + well + "\" for selected plate type \"" + plateType +"\""); return false}
 	var row = filter2Letters.test(well) ? 26 + well.charCodeAt(1) - 64 : well.charCodeAt(0) - 64
-	var col = filter12Numbers.exec(well)
+	var col = filter12Numbers.exec(well)[0]
 	return [Number(row),Number(col)]
-	
 }
 
 // this function returns true if run on VWorks 14.x else returns false
@@ -604,16 +603,17 @@ function getTimeStamp () {
 	return  [[YYYY,MM,DD].join("-"),[hh,mm,ss].join(":")].join(" ")
  }
 
-// this function adds a line to a custom log file creating the path if not existent 
-// if fileOrTask is the task object then the output file is automatically set to
-// C:\VWorks Workspace\Outputs\<protocol name>_out.txt
+// This function adds a line to a custom log file creating the path if not existent. 
+// If fileOrTask is the task object then the output file is automatically set to
+// C:\VWorks Workspace\Outputs\<protocol name>_out.txt.
+// If txtLine is an array its elements are automatically join()'ed with tabs (as in usual VWorks logs).  
 function customLog (txtLine, fileOrTask, overwrite) {
 	var fileName = "", f = new File()
 	if (typeof fileOrTask === "object") {
 		if (typeof fileOrTask.getProtocolName === "function") {
-			fileName = "C:/VWorks Workspace/Outputs/" + 
-				(fileOrTask.getProtocolName().replace(/\\/g,"/").split("/").pop()).split(".")[0] +
-				"_out.txt"
+			var tmp = (fileOrTask.getProtocolName().replace(/\\/g,"/").split("/").pop())
+			tmp = tmp.slice(0,tmp.lastIndexOf("."))
+			fileName = "C:/VWorks Workspace/Outputs/" + tmp + "_out.txt"
 		}
 		else {
 			print("customLog: no getProtocolName() method in passed object"); return
@@ -625,9 +625,34 @@ function customLog (txtLine, fileOrTask, overwrite) {
 	var path = (fileName.split("/")).slice(0,-1).join("/")
 	if (!f.Exists(path)) run("cmd /c mkdir \"" + path + "\"" , true)
 	f.Open(fileName, overwrite)
-	f.Write(txtLine + "\n")
+	f.Write((isArray(txtLine) ? txtLine.join("\t") : txtLine) + "\n")
 	f.Close()
 	return true
+ }
+
+ // Here's another, but this time it is a constructor
+ function CustomLog (fileOrTask, sep) {
+	var fileName = "", f = new File()
+	if (typeof fileOrTask === "object") {
+		if (typeof fileOrTask.getProtocolName === "function") {
+			var tmp = (fileOrTask.getProtocolName().replace(/\\/g,"/").split("/").pop())
+			tmp = tmp.slice(0,tmp.lastIndexOf("."))
+			fileName = "C:/VWorks Workspace/Outputs/" + tmp + "_out.txt"
+		}
+		else {
+			print("customLog: no getProtocolName() method in passed object"); return
+		}
+	}
+	fileName = (fileName || fileOrTask).toString().replace(/\\/g,"/")
+	if (!fileName) {print("CustomLog: no fileName given"); return}
+	if (fileName.indexOf("/") === -1) {print("CustomLog: complete file path needed"); return}
+	var path = (fileName.split("/")).slice(0,-1).join("/")
+	if (!f.Exists(path)) run("cmd /c mkdir \"" + path + "\"" , true)
+	this.log = function (txtLine, overwrite) {
+		f.Open(fileName, overwrite)
+		f.Write((isArray(txtLine) ? txtLine.join(sep) : txtLine) + "\n")
+		f.Close()
+	}
  }
 
 
@@ -792,7 +817,7 @@ function wellselectionToWell (ws,pad) {
 	var col = ws[1]
 	var string = String.fromCharCode(65+(row-1)%26)
 	if (Math.floor((row-1)/26) > 0) string += string
-	return string+ ( "0000" + col).slice(-pad) 
+	return string+ ( "0000" + col).slice(-(pad ? pad : string.length)) 
 }
 
 // This function is used to send a message to a Telegram bot. 
