@@ -102,7 +102,7 @@ Array.prototype.some = function(callback){
     return false;
 }
 
-Array.prototype.reduce=function(){
+Array.prototype.reduce = function(){
     var callback = arguments[0];
     var currentVal = arguments[1];
 	var startElem = 0
@@ -132,6 +132,21 @@ Array.prototype.fill = function (value, start, end) {
   	for (var i = start; i < end; i++) this[i] = value
   	return this
 }
+
+// this is useful for shuffling an array
+// (Fisher-Yates Shuffle Algorithm)
+Array.prototype.shuffle = function () {
+    var arr = this.slice() //shallow copy
+    var len = arr.length
+    var i, j, tmp
+    for (i = len-1; i > 0 ; i--) {
+       j = Math.floor(Math.random() * (i+1))
+       tmp = arr[i]
+       arr[i] = arr[j]
+       arr[j] = tmp
+    }
+    return arr
+ }
 
 // ======================== POLYFILLS FOR Strings ===============================
 
@@ -805,7 +820,7 @@ function indexToWellselection (index,mode,format) {
 	}
 	return [row,col]
 }
-
+	
 // This function transform a wellselection ARRAY (not array of arrays) 
 // into a well address
 function wellselectionToWell (ws,pad) {
