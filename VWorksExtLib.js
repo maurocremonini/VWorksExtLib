@@ -32,7 +32,6 @@ function isWSArray(a) {
 
 // ======================== POLYFILLS FOR ARRAYS ===============================
 
-// Adding indexOf() to the Array prototype
 Array.prototype.indexOf = function (x) {
 	for (var i = 0; i < this.length; i++) {
 		if (this[i] === x) return i
@@ -40,10 +39,23 @@ Array.prototype.indexOf = function (x) {
 	return -1
 }
 	
-// Adding lastIndexOf to the Array prototype
 Array.prototype.lastIndexOf = function (x) {
 	for (var i = this.length-1; i >=0; i--) {
 		if (this[i] === x) return i
+	}
+	return -1
+}
+
+Array.prototype.findIndex = function (callback, x) {
+	for (var i = 0; i < this.length; i++) {
+		if (callback(this[i],i,this) === x) return i
+	}
+	return -1
+}
+
+Array.prototype.findLastIndex = function (callback, x) {
+	for (var i = this.length-1; i >=0; i--) {
+		if (callback(this[i],i,this) === x) return i
 	}
 	return -1
 }
@@ -162,6 +174,16 @@ String.prototype.zeropad = function (digits) {
 	var z = ""
 	for (var i = 0; i < digits-1; i++) z += "0"
 	return (z + this).slice(-digits) 
+}
+
+// Zero-padding a string to "digits" using "chr" -- now using the official name
+String.prototype.padStart = function (digits, chr) {
+	var digits = Number(digits); 
+	var chr = chr[0] || "0";
+	if (digits < 1 || isNaN(digits)) {print("padStart: bad input"); return;}
+	var pad = "";
+	for (var i = 0; i < digits-1; i++) pad += chr;
+	return (pad + this).slice(-digits); 
 }
 
 // Repeat string "count" times and concatenate
