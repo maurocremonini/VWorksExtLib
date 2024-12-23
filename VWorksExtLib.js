@@ -1,22 +1,22 @@
 // VWorksExtLib follows
 // Mauro A. Cremonini - Agilent Technologies
-// see credits in the code
+// (Credits where credit is due.)
 
 // ======================== FUNCTIONS FOR ARRAYS ===============================
 
 // isArray returns true or false
 // if the passed argument is an array
 function isArray(a) {
-	return Object.prototype.toString.call(a) === "[object Array]"
+	return Object.prototype.toString.call(a) === "[object Array]";
 }
 
 // isWSArray returns true if the passed argument is an array 
 // of 2-element arrays that can be used for task.Wellselection
 function isWSArray(a) {
-	if (!isArray(a)) return false
+	if (!isArray(a)) return false;
 	// check all elements for "Array-ness"
 	for (var i = 0; i < a.length; i++) {
-		if (!isArray(a[i]) || a[i].length !== 2 || typeof a[i][0] !== "number" || typeof a[i][1] !== "number" ) return false
+		if (!isArray(a[i]) || a[i].length !== 2 || typeof a[i][0] !== "number" || typeof a[i][1] !== "number" ) return false;
 	}
 	return true
 }
@@ -24,95 +24,119 @@ function isWSArray(a) {
 // WSArray2String returns a "task.wellselection-like" string 
 // useful when checking AoA's for multiAsp or multiDisp
 	function WSArray2String(a) {
-	if (!isWSArray(a)) return "Not WS Array!"
-	var tmp = []
-	for (var i = 0; i < a.length; i++) tmp.push("["+a[i][0]+","+a[i][1]+"]")
-	return tmp.join(" , ")
+	if (!isWSArray(a)) return "Not WS Array!";
+	var tmp = [];
+	for (var i = 0; i < a.length; i++) tmp.push("["+a[i][0]+","+a[i][1]+"]");
+	return tmp.join(" , ");
 }
 
 // ======================== POLYFILLS FOR ARRAYS ===============================
 
-Array.prototype.indexOf = function (x) {
-	for (var i = 0; i < this.length; i++) {
-		if (this[i] === x) return i
-	}
-	return -1
+Array.prototype.indexOf = function (x, fromIndex) {
+	// Return value:
+	// The first index of x in the array; -1 if not found.
+	var len = this.length;
+	var fromIndex = Number(fromIndex);
+	if (fromIndex >= len) return -1;
+	if (!fromIndex || fromIndex < -len) fromIndex = 0;
+	for (var i = fromIndex + (fromIndex < 0)*len; i < len; i++) {
+		if (this[i] === x) return i;
+	};
+	return -1;
 }
 	
-Array.prototype.lastIndexOf = function (x) {
-	for (var i = this.length-1; i >=0; i--) {
+Array.prototype.lastIndexOf = function (x, fromIndex) {
+	// Return value:
+	// The last index of x in the array; -1 if not found.
+	// --> to be checked !!!!
+	var len = this.length;
+	var fromIndex = Number(fromIndex);
+	if (fromIndex < -len) return -1;
+	if (!fromIndex || fromIndex >= len) fromIndex = len-1;
+	for (var i = fromIndex + (fromIndex < 0)*len; i >= 0; i--) {
 		if (this[i] === x) return i
 	}
 	return -1
 }
 
-Array.prototype.findIndex = function (callback, x) {
+Array.prototype.findIndex = function (callback, thisArg) {
+	// Return value:
+	//The index of the first element in the array that passes the test. Otherwise, -1.
 	for (var i = 0; i < this.length; i++) {
-		if (callback(this[i],i,this) === x) return i
+		if (callback.apply(thisArg, [this[i], i, this])) return i
 	}
 	return -1
 }
 
-Array.prototype.findLastIndex = function (callback, x) {
+Array.prototype.findLastIndex = function (callback, thisArg) {
+	// Return value:
+	//The index of the last element in the array that passes the test. Otherwise, -1.
 	for (var i = this.length-1; i >=0; i--) {
-		if (callback(this[i],i,this) === x) return i
+		if (callback.apply(thisArg, [this[i], i, this])) return i
 	}
 	return -1
 }
 
-// modified from https://dev.to/imranmind/javascript-array-polyfills-how-to-create-polyfills-in-js-1i2i
-
-Array.prototype.map = function(callback){
+Array.prototype.map = function(callback, thisArg){
+	// Return value:
+	// A new array with each element being the result of the callback function.
     var arr = [];
-    for(var i=0; i<this.length; i++){
-        arr.push(callback(this[i],i,this));
+    for(var i=0; i<this.length; i++) {
+        arr.push(callback.apply(thisArg, [this[i], i, this]));
     }
     return arr;
 }
 
-Array.prototype.filter = function(callback){
+Array.prototype.filter = function(callback, thisArg) {
+	// Return value:
+	// A shallow copy of the given array containing just the elements that pass the test. 
+	// If no elements pass the test, an empty array is returned.
     var arr = [];
-    for(var i=0; i<this.length; i++){
-        if(callback(this[i],i,this)){
-            arr.push(this[i]);
-        }
+    for(var i=0; i<this.length; i++) {
+        if (callback.apply(thisArg, [this[i], i, this])) arr.push(this[i]);
     }
     return arr;
 }
 
-Array.prototype.forEach = function(callback){
+Array.prototype.forEach = function(callback, thisArg) {
+	// Return value:
+	// None.
     for(var i=0; i<this.length; i++){
-        callback(this[i],i,this);
+        callback.apply(thisArg, [this[i], i, this]);
     }
 }
 
-Array.prototype.find = function(callback){
+Array.prototype.find = function(callback, thisArg) {
+	// Return value: 
+	// The first element in the array that satisfies the provided testing function. 
+	// Otherwise, undefined is returned.
     for(var i=0; i<this.length; i++){
-        var res = callback(this[i],i,this);
-        if(res){
-            return this[i];
-        }
+    	if (callback.apply(thisArg, [this[i], i, this])) return this[i];
     }
     return undefined;
 }
 
-Array.prototype.every = function(callback){
+Array.prototype.every = function(callback, thisArg){
+	// Return value:
+	// true unless callback returns a falsy value for an array element, 
+	// in which case false is immediately returned.
     for(var i=0; i<this.length; i++){
-        if(!callback(this[i],i,this)){
-            return false;
-        }
+        if (!callback.apply(thisArg, [this[i], i, this])) return false;
     }
     return true;
 }
 
-Array.prototype.some = function(callback){
+Array.prototype.some = function(callback, thisArg){
+	// Return value:
+	// false unless callback returns a truthy value for an array element, 
+	// in which case true is immediately returned.
     for(var i=0; i<this.length; i++){
-        if(callback(this[i],i,this)){
-            return true;
-        }
+        if (callback.apply(thisArg, [this[i], i, this])) return true;
     }
     return false;
 }
+
+// TBD from here
 
 Array.prototype.reduce = function(){
     var callback = arguments[0];
