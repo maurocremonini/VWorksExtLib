@@ -48,7 +48,6 @@ Array.prototype.indexOf = function (x, fromIndex) {
 Array.prototype.lastIndexOf = function (x, fromIndex) {
 	// Return value:
 	// The last index of x in the array; -1 if not found.
-	// --> to be checked !!!!
 	var len = this.length;
 	var fromIndex = Number(fromIndex);
 	if (fromIndex < -len) return -1;
@@ -77,14 +76,26 @@ Array.prototype.findLastIndex = function (callback, thisArg) {
 	return -1
 }
 
-Array.prototype.map = function(callback, thisArg){
+Array.prototype.map = function(callback, thisArg) {
 	// Return value:
 	// A new array with each element being the result of the callback function.
+	// Sparse arrays will still be sparse and callback will not be invoked on them. 
     var arr = [];
     for(var i=0; i<this.length; i++) {
-        arr.push(callback.apply(thisArg, [this[i], i, this]));
+		if (this[i] === undefined) continue;
+        arr[i] = callback.apply(thisArg, [this[i], i, this]);
     }
     return arr;
+}
+
+Array.prototype.forEach = function(callback, thisArg) {
+	// Return value:
+	// None.
+	// Sparse arrays will still be sparse and callback will not be invoked on them. 
+    for(var i=0; i<this.length; i++){
+		if (this[i] === undefined) continue;
+        callback.apply(thisArg, [this[i], i, this]);
+    }
 }
 
 Array.prototype.filter = function(callback, thisArg) {
@@ -96,14 +107,6 @@ Array.prototype.filter = function(callback, thisArg) {
         if (callback.apply(thisArg, [this[i], i, this])) arr.push(this[i]);
     }
     return arr;
-}
-
-Array.prototype.forEach = function(callback, thisArg) {
-	// Return value:
-	// None.
-    for(var i=0; i<this.length; i++){
-        callback.apply(thisArg, [this[i], i, this]);
-    }
 }
 
 Array.prototype.find = function(callback, thisArg) {
@@ -153,7 +156,6 @@ Array.prototype.reduce = function(){
     return currentVal;
 }
 
-// modified from https://siddhigate.hashnode.dev/i-wrote-polyfills-for-32-javascript-array-methods
 
 Array.prototype.fill = function (value, start, end) {
 	var start = Number(start) || 0
