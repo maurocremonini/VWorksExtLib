@@ -82,8 +82,8 @@ Array.prototype.map = function(callback, thisArg) {
 	// Sparse arrays will still be sparse and callback will not be invoked on them. 
     var arr = [];
     for(var i=0; i<this.length; i++) {
-		if (this[i] === undefined) continue;
-        arr[i] = callback.apply(thisArg, [this[i], i, this]);
+		if (!(i in this)) continue;
+		arr[i] = callback.apply(thisArg, [this[i], i, this]);
     }
     return arr;
 }
@@ -93,7 +93,7 @@ Array.prototype.forEach = function(callback, thisArg) {
 	// None.
 	// Sparse arrays will still be sparse and callback will not be invoked on them. 
     for(var i=0; i<this.length; i++){
-		if (this[i] === undefined) continue;
+		if (!(i in this)) continue;
         callback.apply(thisArg, [this[i], i, this]);
     }
 }
@@ -104,6 +104,7 @@ Array.prototype.filter = function(callback, thisArg) {
 	// If no elements pass the test, an empty array is returned.
     var arr = [];
     for(var i=0; i<this.length; i++) {
+		if (!(i in this)) continue;
         if (callback.apply(thisArg, [this[i], i, this])) arr.push(this[i]);
     }
     return arr;
@@ -124,6 +125,7 @@ Array.prototype.every = function(callback, thisArg){
 	// true unless callback returns a falsy value for an array element, 
 	// in which case false is immediately returned.
     for(var i=0; i<this.length; i++){
+		if (!(i in this)) continue;
         if (!callback.apply(thisArg, [this[i], i, this])) return false;
     }
     return true;
@@ -134,28 +136,40 @@ Array.prototype.some = function(callback, thisArg){
 	// false unless callback returns a truthy value for an array element, 
 	// in which case true is immediately returned.
     for(var i=0; i<this.length; i++){
+		if (!(i in this)) continue;
         if (callback.apply(thisArg, [this[i], i, this])) return true;
     }
     return false;
 }
 
-// TBD from here
-
-Array.prototype.reduce = function(){
-    var callback = arguments[0];
-    var currentVal = arguments[1];
-	var startElem = 0
-	if (currentVal === undefined) {
-		currentVal = this[0]
-		startElem = 1
+Array.prototype.reduce = function(callback, initialValue) {
+	// catching error 
+	if (this.length === 0 && !initialValue) {
+		print("Error in reduce");
+		return "ERROR";
 	}
-    for(var i=startElem; i<this.length; i++){
-      var result = callback(currentVal, this[i], i ,this);
-      currentVal = result;
+	// edge case #1
+	if (this.length === 0 && initialValue) return initialValue;
+	// edge case #2 - check for one only element somewhere
+	var filteredThis = this.filter(function (el) {return !!el});
+	if (initialValue === undefined && filteredThis.length === 1) return filteredThis[0];
+	// remaining two cases 
+	var accumulator, startElement;
+	if (initialValue === undefined) {
+		accumulator = this[0];
+		startElement = 1;
+	} else {
+		accumulator = initialValue;
+		startElement = 0;
+	};
+    for(var i=startElement; i<this.length; i++){
+		if (!(i in this)) continue;
+      	accumulator = callback(accumulator, this[i], i ,this);
     }
-    return currentVal;
+    return accumulator;
 }
 
+// TBD from here
 
 Array.prototype.fill = function (value, start, end) {
 	var start = Number(start) || 0
