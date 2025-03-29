@@ -36,7 +36,7 @@ Array.prototype.indexOf = function (x, fromIndex) {
 	// Return value:
 	// The first index of x in the array; -1 if not found.
 	var len = this.length;
-	var fromIndex = Number(fromIndex);
+	var fromIndex = parseInt(fromIndex);
 	if (fromIndex >= len) return -1;
 	if (!fromIndex || fromIndex < -len) fromIndex = 0;
 	for (var i = fromIndex + (fromIndex < 0)*len; i < len; i++) {
@@ -49,7 +49,7 @@ Array.prototype.lastIndexOf = function (x, fromIndex) {
 	// Return value:
 	// The last index of x in the array; -1 if not found.
 	var len = this.length;
-	var fromIndex = Number(fromIndex);
+	var fromIndex = parseInt(fromIndex);
 	if (fromIndex < -len) return -1;
 	if (!fromIndex || fromIndex >= len) fromIndex = len-1;
 	for (var i = fromIndex + (fromIndex < 0)*len; i >= 0; i--) {
@@ -169,47 +169,50 @@ Array.prototype.reduce = function(callback, initialValue) {
     return accumulator;
 }
 
-// TBD from here
-
 Array.prototype.fill = function (value, start, end) {
-	var start = Number(start) || 0
-	var end = Number(end)
-  	var end = end === 0 ? 0 : (end || this.length)
-  	if (start < -this.length) start = 0
-  	if (start >= this.length) return this
-  	if (end <= start) return this
-  	if (end < -this.length) end = 0
-  	if (start < 0) start = this.length + start
-  	if (end < 0) end = this.length + end
-  	for (var i = start; i < end; i++) this[i] = value
+	var len = this.length;
+	if (len === 0) return this;
+	var start = parseInt(start) || 0;
+	var end = (end===undefined && len) || (parseInt(end) || 0);
+	start =  start < 0 ?  start = len + start : start;
+	end = end < 0 ? end = len + end : end; 
+	if (start < 0) start = 0;
+	if (end < 0) end = 0; 
+	if (end > len) end = len;
+	if (start >= len) return this;
+	if (end <= start) return this;
+  	for (var i = start; i < end; i++) this[i] = value;
   	return this
 }
 
-// this is useful for shuffling an array
+// This is useful for shuffling an array
 // (Fisher-Yates Shuffle Algorithm)
 Array.prototype.shuffle = function () {
-    var arr = this.slice() //shallow copy
-    var len = arr.length
-    var i, j, tmp
+    var arr = this.slice(); //shallow copy
+    var len = arr.length;
+    var i, r, tmp;
     for (i = len-1; i > 0 ; i--) {
-       j = Math.floor(Math.random() * (i+1))
-       tmp = arr[i]
-       arr[i] = arr[j]
-       arr[j] = tmp
+       r = Math.floor(Math.random() * (i+1));
+       tmp = arr[i];
+       arr[i] = arr[r];
+       arr[r] = tmp;
     }
-    return arr
+    return arr;
  }
+
+// TBD from here
+
 
 // ======================== POLYFILLS FOR Strings ===============================
 
-// Adding trim (after Douglas Crockford)
+// remove non printable leading and trailing characters from string
 String.prototype.trim = function () {
 	return this.replace(/^\s+|\s+$/g,"")
 }
 
 // Zero-padding a string to "digits"
 String.prototype.zeropad = function (digits) {
-	var digits = Number(digits) 
+	var digits = parseInt(digits) 
 	if (digits < 1 || isNaN(digits)) {print("zeropad: bad input"); return}
 	var z = ""
 	for (var i = 0; i < digits-1; i++) z += "0"
