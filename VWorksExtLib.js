@@ -143,7 +143,7 @@ Array.prototype.some = function(callback, thisArg){
 }
 
 Array.prototype.reduce = function(callback, initialValue) {
-	// catching error 
+	// I can't really throw errors in VWorks...
 	if (this.length === 0 && !initialValue) {
 		print("Error in reduce");
 		return "ERROR";
@@ -183,6 +183,13 @@ Array.prototype.fill = function (value, start, end) {
 	if (end <= start) return this;
   	for (var i = start; i < end; i++) this[i] = value;
   	return this
+}
+
+Array.prototype.at = function (index) {
+	var len = this.length;
+	var index = parseInt(index);
+	if (index < -len || index >= len ) return undefined;
+	return index<0 ? this[index+len] : this[index];
 }
 
 // This is useful for shuffling an array
