@@ -218,6 +218,7 @@ String.prototype.trim = function () {
 }
 
 // Zero-padding a string to "digits"
+// This is a duplication of padStart... but esier to use. 
 String.prototype.zeropad = function (digits) {
 	var digits = parseInt(digits) 
 	if (digits < 1 || isNaN(digits)) {print("zeropad: bad input"); return}
@@ -228,7 +229,7 @@ String.prototype.zeropad = function (digits) {
 
 // Zero-padding a string to "digits" using "chr" -- now using the official name
 String.prototype.padStart = function (digits, chr) {
-	var digits = Number(digits); 
+	var digits = parseInt(digits); 
 	var chr = chr[0] || "0";
 	if (digits < 1 || isNaN(digits)) {print("padStart: bad input"); return;}
 	var pad = "";
@@ -245,106 +246,8 @@ String.prototype.repeat = function (count) {
 	return outStr
 }
 
-// Simple clone of the Python format() method. 
-String.prototype.format = function () {
-	// This function has no parameters because the number of arguments passed by the caller is variable.
-	// All passed values are stored by default in the special "arguments" object.
- 
-	// this RegExp matches all groups that start with "{" and end with "}"
-	// using lazy evaluation (so that each group is singularly matched)
-	var re = /(\{.*?\})/g
- 
-	// "hits" is an array containing all the placeholders found in the string
-	var hits = this.match(re)
-	
-	// if no placeholders return the original string
-	if (!hits) return this
- 
-	// create an ancillary function that returns the index of a test value in an array
-	// (method indexOf() for arrays does not exist in VWorks JS)
-	var indexOf = function (arr, test) {
-	   for (var i = 0; i < arr.length; i++) if (arr[i] === test) return i
-	   return -1 
-	} 
- 
-	// find unique values in "hits" and store them in "hitsUniq"
-	var hitsUniq = []
-	for (var i = 0; i < hits.length; i++) if (indexOf(hits,hits[i]) === i) hitsUniq.push(hits[i])
- 
-	// check whether all placeholders contain numbers 
-	var re2 =  /[\{\}]/g, allNumbers = true
-	for (var i=0; i < hitsUniq.length; i++) {
-	   if (isNaN(hitsUniq[i].replace(re2,""))) {allNumbers = false; break}
-	}  
- 
-	// finally perform the substitutions
-	var re3, str = this, index
-	for (var i = 0; i < hitsUniq.length; i++) {
-	   re3 = new RegExp(hitsUniq[i], "g")
-	   if (allNumbers) {
-		  index = Number(hitsUniq[i].replace(re2,""))
-		  str = str.replace(re3,arguments[index])
-	   }
-	   else {
-		  str = str.replace(re3,arguments[i])
-	   }
-	}
-	return str
-}
- 
-
 // ======================= BASE64 ENCODING/DECODING FUNCTIONS ==================
 // see https://base64.guru/learn/base64-algorithm/encode and wikipedia
-
-function btoa_naive (inStr) {
-    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
-    var totChars = inStr.length
-    var i, tmp, tmpArr = []
-    for (i=0; i < totChars; i++) {
-        tmp = inStr[i].charCodeAt(0)
-        if (i%3 === 0) {
-            tmpArr.push( (tmp & 0xFC) >>> 2 )
-            tmpArr.push( (tmp & 0x03) << 4)
-        } 
-        else if (i%3 === 1) {
-            tmpArr[tmpArr.length-1] |=   ( (tmp & 0xF0) >>> 4)
-            tmpArr.push((tmp & 0x0F) << 2)
-        }
-        else if (i%3 === 2) {
-            tmpArr[tmpArr.length-1] |= ( (tmp & 0xC0) >>> 6)
-            tmpArr.push( (tmp & 0x3F) )
-        }
-    }    
-    tmp = ""
-    for (i=0; i < tmpArr.length; i++) tmp += alphabet[tmpArr[i]]
-    return tmp
-}
-
-function atob_naive (inStr) {
-    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
-    var totChars = inStr.length
-    var i, tmp, tmpArr = []
-    for (i=0; i < totChars; i++) {
-        tmp = alphabet.indexOf(inStr[i])
-        if (i%4 === 0) {
-            tmpArr.push( (tmp & 0x3F) << 2 )
-        }
-        else if (i%4 === 1) {
-            tmpArr[tmpArr.length-1] |=  (tmp & 0x30) >>> 4
-            tmpArr.push ( (tmp & 0x0F) << 4 )
-        } 
-        else if (i%4 === 2) {
-            tmpArr[tmpArr.length-1] |= (tmp & 0x3C) >>> 2
-            tmpArr.push( (tmp & 0x03) << 6)
-        }
-        else if (i%4 === 3) {
-            tmpArr[tmpArr.length-1] |= (tmp & 0x3F)
-        }
-    }
-    tmp = ""
-    for (i=0; i < tmpArr.length; i++) tmp += String.fromCharCode(tmpArr[i])
-    return tmp
-}
 
 function btoa (inStr) {
 	var inStr = String(inStr)
@@ -377,38 +280,37 @@ function atob (inStr) {
 
 // ======================= OTHER FUNCTIONS ======================================
 
-
-/*
-This function solves the problem of processing "nUnits" of something when the available maximum capacity is "maxCapacity" 
-and each unit needs to use "someCapacity". The function will return the "best" number of cycles needed to complete the action  
-and the number of units that will be processed in each cycle. "Best" here is intented as the one that makes the resulting 
-processed units per cycles as similar as possible.  
-Possible uses: 
-1. filling "nUnits" columns (with multidispense), each with "someCapacity" uL using tips having a max volume of "maxCapacity" uL.
-2. processing "nUnits" plates stored in a stacker when the available space on the Bravo amounts to "maxCapacity" locations 
-   and one needs to know how many plates to use in each cycle. In case one has 3 locations available maxCapacity=3 and someCapacity=1.  
-The function returns an object whose propertes are "nCycles" (integer) and "unitsPerCycle" (array of integers of length nCycles).
- 
-Test #1: get 16 plates in groups of 3 on the Bravo:
-
-print("=== Test with number of plates")
-pTest = {nUnits: 16,maxCapacity: 3,someCapacity: 1}
-pRes = doActionInCycles(pTest)
-print("nUnits = " + pTest.nUnits + " nCycles = " + pRes.nCycles + " unitsPerCycle = " + pRes.unitsPerCycle)
-
---> nUnits = 16 nCycles = 6 unitsPerCycle = 3,3,3,3,2,2 (note that it is *not* 3,3,3,3,3,1)
-
-Test #2: calculate how to multidispense 30 uL to 9 columns using filtered tips whose max volume is 180 uL:
-
-print("=== Test with multidispense")
-vTest = {nUnits: 9,maxCapacity: 180,someCapacity: 30}
-vRes = doActionInCycles(vTest)
-print("nUnits = " + vTest.nUnits + " nCycles = " + vRes.nCycles + " unitsPerCycle = " + vRes.unitsPerCycle)
-
---> nUnits = 9 nCycles = 2 unitsPerCycle = 5,4 (*not* 6,3)
-
-*/
 function doActionInCycles (o) {
+	/*
+	This function solves the problem of processing "nUnits" of something when the available maximum capacity is "maxCapacity" 
+	and each unit needs to use "someCapacity". The function will return the "best" number of cycles needed to complete the action  
+	and the number of units that will be processed in each cycle. "Best" here is intented as the one that makes the resulting 
+	processed units per cycles as similar as possible.  
+	Possible uses: 
+	1. filling "nUnits" columns (with multidispense), each with "someCapacity" uL using tips having a max volume of "maxCapacity" uL.
+	2. processing "nUnits" plates stored in a stacker when the available space on the Bravo amounts to "maxCapacity" locations 
+	and one needs to know how many plates to use in each cycle. In case one has 3 locations available maxCapacity=3 and someCapacity=1.  
+	The function returns an object whose propertes are "nCycles" (integer) and "unitsPerCycle" (array of integers of length nCycles).
+	
+	Test #1: get 16 plates in groups of 3 on the Bravo:
+
+	print("=== Test with number of plates")
+	pTest = {nUnits: 16,maxCapacity: 3,someCapacity: 1}
+	pRes = doActionInCycles(pTest)
+	print("nUnits = " + pTest.nUnits + " nCycles = " + pRes.nCycles + " unitsPerCycle = " + pRes.unitsPerCycle)
+
+	--> nUnits = 16 nCycles = 6 unitsPerCycle = 3,3,3,3,2,2 (note that it is *not* 3,3,3,3,3,1)
+
+	Test #2: calculate how to multidispense 30 uL to 9 columns using filtered tips whose max volume is 180 uL:
+
+	print("=== Test with multidispense")
+	vTest = {nUnits: 9,maxCapacity: 180,someCapacity: 30}
+	vRes = doActionInCycles(vTest)
+	print("nUnits = " + vTest.nUnits + " nCycles = " + vRes.nCycles + " unitsPerCycle = " + vRes.unitsPerCycle)
+
+	--> nUnits = 9 nCycles = 2 unitsPerCycle = 5,4 (*not* 6,3)
+	*/
+
 	var props = ["someCapacity","nUnits","maxCapacity"]
 	
 	if (typeof(o) !== "object") {
@@ -442,111 +344,6 @@ function doActionInCycles (o) {
 }
 
 function getWellselection (well,plateType) {
-	// This function converts a well coordinate in the form of "A1", "P24", "AC13", etc 
-	// into a vector (not a vector of vectors!) e.g. [1,1], [3,12], etc: [row,col]
-	// also useful for checking if the well code is correct.
-	// It converts the coordinates to uppercase and removes all spaces. 
-	// plateType can be 6, 12, 24, 48, 96, 384 and 1536.
-	// plateType defaults to 96 if undefined.
-	// Version 1.0.1
-	// Mauro Cremonini - Agilent - March 2019
-	// Apr 2019 - modified regexp for filtering all but letters and numbers in coord 
-	//            useful when one forgets quotes or double quotes around strings in csv
-	//			Added possibility of asking for current version. 
-	// Jul 2019 - v 1.0.2 added support for 54 well plates
-	// Mar 2020 - v 1.0.3 fixed issue met when passing platype as string 
-	
-	//print("getWellselection: received well = "+ well +", plateType = " + plateType)
-	
-	var version = "1.0.3 - Mar 2020"
-	
-    // if plateType is “undefined” default to 96
-	var plateType = Number(plateType) || 96
-	var well = well
-	if (well === undefined) {
-		print("Error: well is undefined!") 
-		return false
-	}
-
-	// if well contains "version" return current version
-	if (well === "current_version") return version
-
-	// in the part below the “switch” construct behaves like a series of if … else if … else statements
-	// and sets rowH and colH to the maximum number of rows and columns for each tested plateType
-	switch (plateType) {
-		case 6:
-			var rowH = 2
-			var colH = 3
-        break
-		case 12:  
-			var rowH = 3
-			var colH = 4
-		break
-		case 24: 
-			var rowH = 4
-			var colH = 6
-		break
-		case 48:
-			var rowH = 6
-			var colH = 8
-		break
-		case 54:
-			var rowH = 6
-			var colH = 9
-		break
-		case 96:
-			var rowH = 8
-			var colH = 12
-		break
-		case 384:
-			var rowH = 16
-			var colH = 24
-		break
-		case 1536:
-			var rowH = 32
-			var colH = 48
-		break
-		default:
-			print("Error: plateType is set to " + plateType)
-			print("Wrong plate type selection in getWellselection")
-		return false
-	}
-	// turn all caps to big and strip spaces
-	var coord = well.toUpperCase().replace(/[^A-Za-z0-9]/g,'')
-	// subtract 64 from ASCII codes of the first and second char
-	var test1 = coord.charCodeAt(0) - 64
-	var test2 = coord.charCodeAt(1) - 64
-	if (test1 >= 1 && test1 <= 6 && test2 >= 1 && test2 <= 6) {
-		// first and second chars are A to F so it is 1536-type coord
-		// so add 26 to find row number
-		// col begins at column 3
-		var row = 26 + test2
-		var col = coord.substring(2) 
-	}
-	else {
-		// any other plate
-		var row = test1
-		var col = coord.substring(1)
-	}
-	// make sure that row and col are numbers
-	// default to zero if “NaN” (not a number)
-	row = Number(row) || 0
-	col = Number(col) || 0
-	//print("Found: row = " + row + ", col = " + col) 
-	// safety check: are row and col meaningful for current plateTyle
-	if (row > 0 && row <= rowH && col > 0 && col <= colH) {
-		return [row,col] // returning a vector ok
-	}
-	else {
-		print("Warning: well " + coord + " is out of range for the selected plate type") 
-		return false // conversion failed
-	}   
-}
-
-// This is the new version of getWellselection written using only RegExps
-// Not fully tested yet 
-
-function getWellselection2 (well,plateType) {
 	// 2023-01-23 v 1.0
 	//this version uses regexps for nearly all operations!
 	var filterSpaces = /[^A-Z0-9]/g
@@ -578,13 +375,11 @@ function isVWorks14() {
 	return (typeof IsCompliantMode === "function")
 }
 
-	
-// This function pulls information about labware from the registry
-// and returns an object with some parameters	
+// This function pulls information about labware from the registry (VWorks 13) 
+// or the roiZip record (VWorks 14) and returns an object with labware's parameters. 	
 // Updated for VWorks 14 (Jan 2023)
 function plateInfo (plateName) {
 	if (typeof plateName !== "string") {print("plateInfo: bad input argument"); return}
-	
 	var baseC = ["","Microplate","Filter plate","Reservoir","Tip Wash Station","Pin tool","Tip box","Lid","Tip trash bin","AM cartridge rack"] 
 	var wellG = ["","Round","Square"]
 	var wellB = ["","Rounded","Flat","V-Shaped"]
@@ -597,30 +392,14 @@ function plateInfo (plateName) {
 					wellGeometry: "WELL_GEOMETRY",
 					wellBottom: "WELL_BOTTOM_SHAPE",
 					tipCapacity: "TIP_CAPACITY"}
-
-	var isVWorks14 = function () {return (typeof IsCompliantMode === "function")}
-	
 	print("Retrieving parameters for labware entry \"" + plateName + "\"")
-   
 	if (isVWorks14()) { 
 		var getQuery = function (q) {
 			var queryTemplate = "//value[@name=\"##@@##\"]/@value"
 			return queryTemplate.replace("##@@##",q)
 		}
-		
-		//make sure that an SP3 folder exists in the world-writable "public" tree
-		var usernamePath = "c:/users/public/SP3/"
-		var usernameFile = usernamePath + "currentUsername.txt"
-		var usernameCommand = "cmd /c \" echo %username% > " + usernameFile + " \""
-		var f = new File()
-		if (!f.Exists(usernamePath)) run("cmd /c mkdir \"" + usernamePath + "\"", true)
-		run(usernameCommand,true)
-		f.Open(usernameFile)
-		var userName = f.Read().replace(/[^A-Za-z0-9]/g,"")
-		f.Close()
-		// point to the user's %temp% folder
-		var outPath = "C:/users/"+userName+"/AppData/Local/Temp/"
-		//var outPath = "C:/VWorks Workspace/Temp/SP3/"
+		// c:/VWorks Workspace must be user writable. 
+		var outPath = "C:/VWorks Workspace/Temp/plateInfo/" 
 		var labwPath = "VWorks Projects/VWorks/Labware/Entries/" //relative to [olssvr]
 		var cmd = "cmd /c mkdir \"" + outPath + "\""
 		var f = new File()
@@ -657,27 +436,23 @@ function plateInfo (plateName) {
 			// 32 bit vworks
 			myKey = "SOFTWARE\\Velocity11\\Shared\\Labware\\Labware_Entries\\" + plateName
 		}
-
 		// create registry object 
 		var reg = new Registry () 
-   
 		// now create an object with all the required info
 		var resObj = {}
 		for (var p in labwrP) {
 			if (labwrP.hasOwnProperty(p)) resObj[p] = reg.Read(myKey,labwrP[p])
 		}
 	}
-	
-	// manipulating properties for some entries
+	// manipulate properties for some entries
 	resObj.labwareType = baseC[resObj.labwareType]
 	resObj.wellGeometry = wellG[resObj.wellGeometry]
 	resObj.wellBottom = wellB[resObj.wellBottom]
 	if (resObj.labwareType !== "Tip box") resObj.tipCapacity = "NA"
-	
 	return resObj
 }
 
-// This function returns a time stamp in the format "YYYY-MM-DD hh:mm:ss"
+// This function returns a time stamp in the format "YYYY-MM-DD_hh-mm-ss"
 function getTimeStamp () {
 	//creating timestamp
 	var myDate = new Date()
@@ -687,7 +462,7 @@ function getTimeStamp () {
 	var hh = ("0"+myDate.getHours()).slice(-2)
 	var mm = ("0"+myDate.getMinutes()).slice(-2)
 	var ss = ("0"+myDate.getSeconds()).slice(-2)
-	return  [[YYYY,MM,DD].join("-"),[hh,mm,ss].join(":")].join(" ")
+	return  [[YYYY,MM,DD].join("-"),[hh,mm,ss].join("-")].join("_")
  }
 
 // This function adds a line to a custom log file creating the path if not existent. 
@@ -724,7 +499,7 @@ function customLog (txtLine, fileOrTask, overwrite) {
 		if (typeof fileOrTask.getProtocolName === "function") {
 			var tmp = (fileOrTask.getProtocolName().replace(/\\/g,"/").split("/").pop())
 			tmp = tmp.slice(0,tmp.lastIndexOf("."))
-			fileName = "C:/VWorks Workspace/Outputs/" + tmp + "_out.txt"
+			fileName = "C:/VWorks Workspace/Output/" + tmp + "_out.txt"
 		}
 		else {
 			print("customLog: no getProtocolName() method in passed object"); return
@@ -907,98 +682,15 @@ function wellselectionToWell (ws,pad) {
 	return string+ ( "0000" + col).slice(-(pad ? pad : string.length)) 
 }
 
-// This function is used to send a message to a Telegram bot. 
-// It needs an ancillary powershell scripts called "telegram_bot.ps1" in 
-// c:\vworks workspace\vworksextlib\scripts\
-// If no token or chatID is provided then the powershell script
-// will be passed only the text (and in this case the defaults in the powershell script will be used)
-function sendToTelegramBot (text, psScript, token, chatID) {
-	var psScript = psScript || "C:/VWorks Workspace/VWorksExtLib/Scripts/telegram_bot.ps1"
-	var cmdToken = token ? "-botToken " + token + " " : ""
-	var cmdChatID = chatID ? "-ChatID " + chatID + " " : ""
-	var commandLine = "cmd /c powershell -ExecutionPolicy Bypass -File \"" + psScript + "\" " + cmdToken + cmdChatID + text
-	print(commandLine)  
-	run(commandLine) 
-}
-
-function sendToTelegramBotInit (obj) {
-	var psScript = obj.psScript || "C:/VWorks Workspace/VWorksExtLib/Scripts/telegram_bot.ps1"
-	var cmdToken = obj.token ? "-Token " + obj.token + " " : ""
-	var cmdChatID = obj.chatID ? "-ChatID " + obj.chatID + " " : ""
-	var commandLine = "cmd /c powershell -ExecutionPolicy Bypass -File \"" + psScript + "\" " + cmdToken + cmdChatID
-	return function (text, debug) {
-		if (debug) print (commandLine + text)
-		run (commandLine + text)
-	}
-}
-
-
-// This function can be used to capture a message and have Windows "say" it
-// using either powershell or the older "Sapi.SpVoice" Windows COM object
-// (useful in case the user is not allowed to use powershell).
-// Selected voice is always #1 (second in list). With US setup it is MS's Zira.
-// text: the text you want Windows to "say"
-// dontSpeak: true or false. If falsy it just returns the provided text. Useful when you create
-//          a chain like this task.Body = speak(myText) in a user message and you have a checkbox
-//          in a form for suppressing voice reading. 
-//          In that case one does task.Body = Speak(myText, noSay). 
-// usePowershell: true or false. If falsy - then the function will use a "speak.vbs" script 
-//                stored in the same folder as this library to do the job (via wscript).  
-function speak(text, dontSpeak, usePowershell) {
-	//TBD
-} 
-
-
-// older stuff =====================================================================
-
-// This function solves the problem of dispensing "vol" amount of coffee (any liquid) to each of "nCups" cups (cols, rows, wells...)
-// with a coffee pot (tips) having a max volume of maxVol (maxVol >= vol) in the least possible number of cycles.
-// Input: an object with the properties "vol", "nCups", "maxvol".
-// Output: an object with the properties "nCycles" (integer) and "dispPerCycle" (array of integers, how many cups can be filled in cycle i-th).
-// The function will return false on failure.  
-// Useful for multidispense.
-function calcMultiDispenseCycles (o) {
-	var props = ["vol","nCups","maxVol"]
-	
-	if (typeof(o) !== "object") {
-		print("Argument is not an object!")
-		return false
-	}
-	for (var i = 0; i < props.length; i++) {
-		if (!o.hasOwnProperty(props[i]) || typeof o[props[i]] !== "number") {
-			print("Problem with property " + props[i]) 
-			return false
-		}
-	}
-	
-	var vol = o.vol, nCups = o.nCups, maxVol = o.maxVol
-	var nCycles = 1, remCycles, cupsPerCycle = [], addCycle
-	
-	if (vol > maxVol) {
-		print("It must be vol <= maxVol")
-		return false
-	}
-	
-	while (vol*Math.ceil(nCups/nCycles) > maxVol) nCycles++
-	remCycles = nCups - nCycles*Math.floor(nCups/nCycles)
-	
-	for (i=0; i<nCycles; i++) {
-		addCycle = (i < remCycles) ? 1 : 0
-		cupsPerCycle.push(addCycle + Math.floor(nCups/nCycles))
-	}
-		
-	return {nCycles: nCycles, dispPerCycle: cupsPerCycle}
-}
-
 // end of VWorksExtLib.js
 print("*** VWorksExtLib.js successfully loaded ***")
 
 // finally load public domain JSON library (VWorks version)
-+function() {
+(function() {
 	var JSONLib = "C:/VWorks Workspace/VWorksExtLib/json2.js"
 	var f = new File()
 	if (f.Exists(JSONLib)) {
 		open(JSONLib)
 		print("*** Public domain json2.js successfully loaded ***")	
 	}	
-}()
+})();
