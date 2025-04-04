@@ -2,13 +2,20 @@
 // Mauro A. Cremonini - Agilent Technologies
 // (Credits where credit is due.)
 
-// ======================== FUNCTIONS FOR ARRAYS ===============================
+// ======================== GENERAL FUNCTIONS ===============================
+
+// this function returns true if run on VWorks 14.x else returns false
+function isVWorks14() {
+	return (typeof IsCompliantMode === "function");
+}
 
 // isArray returns true or false
 // if the passed argument is an array
 function isArray(a) {
 	return Object.prototype.toString.call(a) === "[object Array]";
 }
+
+// ------------------------------------------------------------------------------
 
 // isWSArray returns true if the passed argument is an array 
 // of 2-element arrays that can be used for task.Wellselection
@@ -20,6 +27,8 @@ function isWSArray(a) {
 	}
 	return true
 }
+
+// ------------------------------------------------------------------------------
 
 // WSArray2String returns a "task.wellselection-like" string 
 // useful when checking AoA's for multiAsp or multiDisp
@@ -44,6 +53,8 @@ Array.prototype.indexOf = function (x, fromIndex) {
 	};
 	return -1;
 }
+
+// ------------------------------------------------------------------------------
 	
 Array.prototype.lastIndexOf = function (x, fromIndex) {
 	// Return value:
@@ -58,6 +69,8 @@ Array.prototype.lastIndexOf = function (x, fromIndex) {
 	return -1
 }
 
+// ------------------------------------------------------------------------------
+
 Array.prototype.findIndex = function (callback, thisArg) {
 	// Return value:
 	//The index of the first element in the array that passes the test. Otherwise, -1.
@@ -67,6 +80,8 @@ Array.prototype.findIndex = function (callback, thisArg) {
 	return -1
 }
 
+// ------------------------------------------------------------------------------
+
 Array.prototype.findLastIndex = function (callback, thisArg) {
 	// Return value:
 	//The index of the last element in the array that passes the test. Otherwise, -1.
@@ -75,6 +90,8 @@ Array.prototype.findLastIndex = function (callback, thisArg) {
 	}
 	return -1
 }
+
+// ------------------------------------------------------------------------------
 
 Array.prototype.map = function(callback, thisArg) {
 	// Return value:
@@ -88,6 +105,8 @@ Array.prototype.map = function(callback, thisArg) {
     return arr;
 }
 
+// ------------------------------------------------------------------------------
+
 Array.prototype.forEach = function(callback, thisArg) {
 	// Return value:
 	// None.
@@ -97,6 +116,8 @@ Array.prototype.forEach = function(callback, thisArg) {
         callback.apply(thisArg, [this[i], i, this]);
     }
 }
+
+// ------------------------------------------------------------------------------
 
 Array.prototype.filter = function(callback, thisArg) {
 	// Return value:
@@ -110,6 +131,8 @@ Array.prototype.filter = function(callback, thisArg) {
     return arr;
 }
 
+// ------------------------------------------------------------------------------
+
 Array.prototype.find = function(callback, thisArg) {
 	// Return value: 
 	// The first element in the array that satisfies the provided testing function. 
@@ -119,6 +142,8 @@ Array.prototype.find = function(callback, thisArg) {
     }
     return undefined;
 }
+
+// ------------------------------------------------------------------------------
 
 Array.prototype.every = function(callback, thisArg){
 	// Return value:
@@ -131,6 +156,8 @@ Array.prototype.every = function(callback, thisArg){
     return true;
 }
 
+// ------------------------------------------------------------------------------
+
 Array.prototype.some = function(callback, thisArg){
 	// Return value:
 	// false unless callback returns a truthy value for an array element, 
@@ -141,6 +168,8 @@ Array.prototype.some = function(callback, thisArg){
     }
     return false;
 }
+
+// ------------------------------------------------------------------------------
 
 Array.prototype.reduce = function(callback, initialValue) {
 	// I can't really throw errors in VWorks...
@@ -169,6 +198,8 @@ Array.prototype.reduce = function(callback, initialValue) {
     return accumulator;
 }
 
+// ------------------------------------------------------------------------------
+
 Array.prototype.fill = function (value, start, end) {
 	var len = this.length;
 	if (len === 0) return this;
@@ -185,12 +216,16 @@ Array.prototype.fill = function (value, start, end) {
   	return this
 }
 
+// ------------------------------------------------------------------------------
+
 Array.prototype.at = function (index) {
 	var len = this.length;
 	var index = parseInt(index);
 	if (index < -len || index >= len ) return undefined;
 	return index<0 ? this[index+len] : this[index];
 }
+
+// ------------------------------------------------------------------------------
 
 // This is useful for shuffling an array
 // (Fisher-Yates Shuffle Algorithm)
@@ -207,43 +242,53 @@ Array.prototype.shuffle = function () {
     return arr;
  }
 
-// TBD from here
-
-
-// ======================== POLYFILLS FOR Strings ===============================
+// ======================== POLYFILLS FOR STRINGS ===============================
 
 // remove non printable leading and trailing characters from string
 String.prototype.trim = function () {
-	return this.replace(/^\s+|\s+$/g,"")
+	return this.replace(/^\s+|\s+$/g,"");
 }
+
+// ------------------------------------------------------------------------------
 
 // Zero-padding a string to "digits"
 // This is a duplication of padStart... but esier to use. 
 String.prototype.zeropad = function (digits) {
-	var digits = parseInt(digits) 
-	if (digits < 1 || isNaN(digits)) {print("zeropad: bad input"); return}
-	var z = ""
-	for (var i = 0; i < digits-1; i++) z += "0"
-	return (z + this).slice(-digits) 
+	var digits = parseInt(digits);
+	if (digits < 1 || isNaN(digits)) {print("zeropad: bad input"); return};
+	var z = "";
+	for (var i = 0; i < digits-1; i++) z += "0";
+	return (z + this).slice(-digits);
 }
+
+// ------------------------------------------------------------------------------
 
 // Zero-padding a string to "digits" using "chr" -- now using the official name
 String.prototype.padStart = function (digits, chr) {
 	var digits = parseInt(digits); 
 	var chr = chr[0] || "0";
-	if (digits < 1 || isNaN(digits)) {print("padStart: bad input"); return;}
+	if (digits < 1 || isNaN(digits)) {print("padStart: bad input"); return;};
 	var pad = "";
 	for (var i = 0; i < digits-1; i++) pad += chr;
 	return (pad + this).slice(-digits); 
 }
 
+// ------------------------------------------------------------------------------
+
 // Repeat string "count" times and concatenate
 String.prototype.repeat = function (count) {
-	var count = parseInt(count) || 0
-	if (!count || count < 0 )  return this
-	var outStr = ""
-	for (var i=0; i<count; i++) outStr += this
-	return outStr
+	var count = parseInt(count) || 0;
+	if (!count || count < 0 )  return this;
+	var outStr = "";
+	for (var i=0; i<count; i++) outStr += this;
+	return outStr;
+}
+
+// ------------------------------------------------------------------------------
+
+// getWellselection() as String method. See below for getWellselection as function.
+String.prototype.getWellselection = function (plateType) {
+	return getWellselection(this,plateType);
 }
 
 // ======================= BASE64 ENCODING/DECODING FUNCTIONS ==================
@@ -261,6 +306,8 @@ function btoa (inStr) {
 	var remChars = inStr.length % 3
 	return remChars ? encoded.slice(0,remChars-3) : encoded
 }
+
+// ------------------------------------------------------------------------------
 
 function atob (inStr) {
 	var inStr = String(inStr)
@@ -311,45 +358,41 @@ function doActionInCycles (o) {
 	--> nUnits = 9 nCycles = 2 unitsPerCycle = 5,4 (*not* 6,3)
 	*/
 
-	var props = ["someCapacity","nUnits","maxCapacity"]
-	
+	var props = ["someCapacity","nUnits","maxCapacity"];
 	if (typeof(o) !== "object") {
-		print("Argument is not an object!")
-		return false
+		print("Argument is not an object!");
+		return false;
 	}
 	for (var i = 0; i < props.length; i++) {
-		if (!o.hasOwnProperty(props[i]) || typeof o[props[i]] !== "number") {a
-			print("Problem with property " + props[i]) 
-			return false
+		if (!o.hasOwnProperty(props[i]) || typeof o[props[i]] !== "number") {
+			print("Problem with property " + props[i]) ;
+			return false;
 		}
 	}
-	
-	var someCapacity = o.someCapacity, nUnits = o.nUnits, maxCapacity = o.maxCapacity
-	var nCycles = 1, remCycles, unitsPerCycle = [], addCycle
-	
+	var someCapacity = o.someCapacity, nUnits = o.nUnits, maxCapacity = o.maxCapacity;
+	var nCycles = 1, remCycles, unitsPerCycle = [], addCycle;
 	if (someCapacity > maxCapacity) {
-		print("It must be someCapacity <= maxCapacity")
-		return false
+		print("It must be someCapacity <= maxCapacity");
+		return false;
 	}
-	
-	while (someCapacity*Math.ceil(nUnits/nCycles) > maxCapacity) nCycles++
-	remCycles = nUnits - nCycles*Math.floor(nUnits/nCycles)
-	
+	while (someCapacity*Math.ceil(nUnits/nCycles) > maxCapacity) nCycles++;
+	remCycles = nUnits - nCycles*Math.floor(nUnits/nCycles);
 	for (i=0; i<nCycles; i++) {
-		addCycle = (i < remCycles) ? 1 : 0
-		unitsPerCycle.push(addCycle + Math.floor(nUnits/nCycles))
+		addCycle = (i < remCycles) ? 1 : 0;
+		unitsPerCycle.push(addCycle + Math.floor(nUnits/nCycles));
 	}
 		
-	return {nCycles: nCycles, unitsPerCycle: unitsPerCycle}
+	return {nCycles: nCycles, unitsPerCycle: unitsPerCycle};
 }
+
+// ------------------------------------------------------------------------------
 
 function getWellselection (well,plateType) {
 	// 2023-01-23 v 1.0
-	//this version uses regexps for nearly all operations!
-	var filterSpaces = /[^A-Z0-9]/g
-	var filterType = /^(6|12|24|48|54|96|384|1536)$/
-	var filter2Letters = /^[A-Z]{2}/
-	var filter12Numbers = /[0-9]{1,2}$/
+	var filterSpaces = /[^A-Z0-9]/g;
+	var filterType = /^(6|12|24|48|54|96|384|1536)$/;
+	var filter2Letters = /^[A-Z]{2}/;
+	var filter12Numbers = /[0-9]{1,2}$/;
 	var checkWell = {6: /^[A-B]0?[1-3]$/,
 					12: /^[A-C]0?[1-4]$/,
 					24: /^[A-D]0?[1-6]$/,
@@ -357,32 +400,28 @@ function getWellselection (well,plateType) {
 					54: /^[A-F]0?[1-9]$/,
 					96: /^[A-H](0?[1-9]|1[012])$/,
 					384: /^[A-P](0?[1-9]|1[0-9]|2[0-4])$/,
-					1536: /^([A-Z]|A[A-F]|([A-F])\2)(0?[1-9]|[123][0-9]|4[0-8])$/} 
-				
-	if (plateType === undefined) {print("getWellselection: no plate type provided - defaulting to 96 well-format"); var plateType = 96} 
-	var plateType = plateType.toString().replace(filterSpaces,'')
-	if (!filterType.test(plateType)) {print("getWellselection: bad plate type \"" + plateType +"\""); return false}
-	var well = well.toString().toUpperCase().replace(filterSpaces,'')
-	if(!checkWell[plateType].test(well)) {print("getWellselection: bad well address \"" + well + "\" for selected plate type \"" + plateType +"\""); return false}
-	var row = filter2Letters.test(well) ? 26 + well.charCodeAt(1) - 64 : well.charCodeAt(0) - 64
-	var col = filter12Numbers.exec(well)[0]
-	return [Number(row),Number(col)]
+					1536: /^([A-Z]|A[A-F]|([A-F])\2)(0?[1-9]|[123][0-9]|4[0-8])$/};
+	if (plateType === undefined) {print("getWellselection: no plate type provided - defaulting to 96 well-format"); var plateType = 96};
+	var plateType = plateType.toString().replace(filterSpaces,'');
+	if (!filterType.test(plateType)) {print("getWellselection: bad plate type \"" + plateType +"\""); return false};
+	var well = well.toString().toUpperCase().replace(filterSpaces,'');
+	if(!checkWell[plateType].test(well)) {print("getWellselection: bad well address \"" + well + "\" for selected plate type \"" + plateType +"\""); return false};
+	var row = filter2Letters.test(well) ? 26 + well.charCodeAt(1) - 64 : well.charCodeAt(0) - 64;
+	var col = filter12Numbers.exec(well)[0];
+	return [parseInt(row),parseInt(col)];
 }
 
-// this function returns true if run on VWorks 14.x else returns false
-// Jan 2023
-function isVWorks14() {
-	return (typeof IsCompliantMode === "function")
-}
+// ------------------------------------------------------------------------------
 
 // This function pulls information about labware from the registry (VWorks 13) 
 // or the roiZip record (VWorks 14) and returns an object with labware's parameters. 	
 // Updated for VWorks 14 (Jan 2023)
+// Improved VWorks 13 part: now it makes sure that labware exists before calling reg.Read() (Apr 2025).
 function plateInfo (plateName) {
 	if (typeof plateName !== "string") {print("plateInfo: bad input argument"); return}
-	var baseC = ["","Microplate","Filter plate","Reservoir","Tip Wash Station","Pin tool","Tip box","Lid","Tip trash bin","AM cartridge rack"] 
-	var wellG = ["","Round","Square"]
-	var wellB = ["","Rounded","Flat","V-Shaped"]
+	var baseC = ["","Microplate","Filter plate","Reservoir","Tip Wash Station","Pin tool","Tip box","Lid","Tip trash bin","AM cartridge rack"];
+	var wellG = ["","Round","Square"];
+	var wellB = ["","Rounded","Flat","V-Shaped"];
 	var labwrP = {	name: "NAME", 
 					wells: "NUMBER_OF_WELLS",
 					maxVolume: "WELL_TIP_VOLUME",
@@ -391,57 +430,70 @@ function plateInfo (plateName) {
 					wellDiameter: "WELL_DIAMETER",
 					wellGeometry: "WELL_GEOMETRY",
 					wellBottom: "WELL_BOTTOM_SHAPE",
-					tipCapacity: "TIP_CAPACITY"}
-	print("Retrieving parameters for labware entry \"" + plateName + "\"")
+					tipCapacity: "TIP_CAPACITY"};
+	print("Retrieving parameters for labware entry \"" + plateName + "\"");
+	// Create plateInfo work folder.
+	// C:/VWorks Workspace must be user writable (it usually is).
+	var outPath = "C:/VWorks Workspace/Temp/plateInfo/";
+	var cmd = "cmd /c mkdir \"" + outPath + "\"";
+	var f = new File();
+	//make sure that outPath exists
+	if (!f.Exists(outPath)) run(cmd, true);		
 	if (isVWorks14()) { 
 		var getQuery = function (q) {
-			var queryTemplate = "//value[@name=\"##@@##\"]/@value"
-			return queryTemplate.replace("##@@##",q)
+			var queryTemplate = "//value[@name=\"##@@##\"]/@value";
+			return queryTemplate.replace("##@@##",q);
 		}
-		// c:/VWorks Workspace must be user writable. 
-		var outPath = "C:/VWorks Workspace/Temp/plateInfo/" 
-		var labwPath = "VWorks Projects/VWorks/Labware/Entries/" //relative to [olssvr]
-		var cmd = "cmd /c mkdir \"" + outPath + "\""
-		var f = new File()
-		//making sure that outPath exists
-		if (!f.Exists(outPath)) run(cmd)
-		// downloading a labware entry to outPath
+		var labwPath = "VWorks Projects/VWorks/Labware/Entries/"; //relative to [olssvr]
+		// download a labware entry to outPath
 		if (!f.Exists("[olssvr]:"+labwPath+plateName+".xml.roiZip")) {
-			print("plateInfo: labware " + plateName + " not found")
-			return
+			print("plateInfo: labware " + plateName + " not found");
+			return;
 		}
-		DownloadFromStorage(labwPath+plateName+".xml",outPath)
+		DownloadFromStorage(labwPath+plateName+".xml",outPath);
 		// Start XPath
-		var xmlDoc = new ActiveX("Msxml2.DOMDocument.6.0")
-		xmlDoc.setProperty("SelectionLanguage","XPath")
-		xmlDoc.async = false
-		f.Open(outPath+plateName+".xml")
-		var isXMLReadOK = xmlDoc.loadXML(f.Read())
-		f.Close()
-		if (!isXMLReadOK) {print("plateInfo: XML read failed"); return}
-		var resObj = {}
+		var xmlDoc = new ActiveX("Msxml2.DOMDocument.6.0");
+		xmlDoc.setProperty("SelectionLanguage","XPath");
+		xmlDoc.async = false;
+		f.Open(outPath+plateName+".xml");
+		var isXMLReadOK = xmlDoc.loadXML(f.Read());
+		f.Close();
+		if (!isXMLReadOK) {print("plateInfo: XML read failed"); return};
+		var resObj = {};
 		for (var p in labwrP) {
-			if (labwrP.hasOwnProperty(p)) resObj[p] = xmlDoc.selectSingleNode(getQuery(labwrP[p])).value
+			if (labwrP.hasOwnProperty(p)) resObj[p] = xmlDoc.selectSingleNode(getQuery(labwrP[p])).value;
 		}  
 	}
 	else {
 		var myKey, reg
-		var vworksPath = "C:\\Program Files (x86)\\Agilent Technologies\\VWorks\\VWorks.exe"
-		var f = new File()
-		if ( f.Exists(vworksPath) ) {
+		var vworksPath = "C:\\Program Files (x86)\\Agilent Technologies\\VWorks\\VWorks.exe";
+		var f = new File();
+		if (f.Exists(vworksPath)) {
 			// 64 bit vworks
-			myKey = "SOFTWARE\\Wow6432Node\\Velocity11\\Shared\\Labware\\Labware_Entries\\" + plateName
+			myKey = "SOFTWARE\\Wow6432Node\\Velocity11\\Shared\\Labware\\Labware_Entries\\" + plateName;
 		}
 		else {
 			// 32 bit vworks
-			myKey = "SOFTWARE\\Velocity11\\Shared\\Labware\\Labware_Entries\\" + plateName
+			myKey = "SOFTWARE\\Velocity11\\Shared\\Labware\\Labware_Entries\\" + plateName;
+		}
+		// Make sure that the labware exists in the registry
+		// otherwise reg.Read() fails and JS stops executing JS code. 
+		var myKey2 = "HKLM\\" + myKey;
+		var regFileName = outPath + "regTest.txt"; 
+		var regCmd = "cmd /c reg query \"" + myKey2 +"\" /v NAME 2> \"" + regFileName + "\"";
+		run(regCmd,true);
+		f.Open(regFileName);
+		if (f.Read().indexOf("ERROR:") > -1) {
+			f.Close();
+			print("plateInfo: labware " + plateName + " not found");
+			return; 
 		}
 		// create registry object 
-		var reg = new Registry () 
+		var reg = new Registry(); 
 		// now create an object with all the required info
-		var resObj = {}
+		var resObj = {};
 		for (var p in labwrP) {
-			if (labwrP.hasOwnProperty(p)) resObj[p] = reg.Read(myKey,labwrP[p])
+			if (labwrP.hasOwnProperty(p)) resObj[p] = reg.Read(myKey,labwrP[p]);
 		}
 	}
 	// manipulate properties for some entries
