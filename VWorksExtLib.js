@@ -734,17 +734,13 @@ function wellselectionToWell (ws,pad) {
 	//return string+ ( "0000" + col).slice(-(pad ? pad : string.length));
 	return string+col.zeropad(pad);
 }
-
 // end of VWorksExtLib.js
 print("*** VWorksExtLib.js successfully loaded ***")
 
 // finally load public domain JSON library (VWorks version)
 // Thanks to Douglas Crockford: https://github.com/douglascrockford/JSON-js
-(function() {
-	var JSONLib = "C:/VWorks Workspace/VWorksExtLib/json2.js"
-	var f = new File()
-	if (f.Exists(JSONLib)) {
-		open(JSONLib)
-		print("*** Public domain json2.js successfully loaded ***")	
-	}	
-})();
+if ((new File).Exists("C:/VWorks Workspace/VWorksExtLib/json2.js")) {
+	open("C:/VWorks Workspace/VWorksExtLib/json2.js");
+	print("*** Public domain json2.js successfully loaded ***");
+};
+
