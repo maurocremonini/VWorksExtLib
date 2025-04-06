@@ -9,6 +9,8 @@ function isVWorks14() {
 	return (typeof IsCompliantMode === "function");
 }
 
+// ------------------------------------------------------------------------------
+
 // isArray returns true or false
 // if the passed argument is an array
 function isArray(a) {
@@ -32,11 +34,23 @@ function isWSArray(a) {
 
 // WSArray2String returns a "task.wellselection-like" string 
 // useful when checking AoA's for multiAsp or multiDisp
-	function WSArray2String(a) {
+function WSArray2String(a) {
 	if (!isWSArray(a)) return "Not WS Array!";
 	var tmp = [];
 	for (var i = 0; i < a.length; i++) tmp.push("["+a[i][0]+","+a[i][1]+"]");
 	return tmp.join(" , ");
+}
+
+// ------------------------------------------------------------------------------
+
+function ensureFolderExists (folder) {
+	var f = new File();
+	var cmd = "cmd /c mkdir \"" + folder + "\"";
+	if (!f.Exists(folder)) {
+		print("Creating " + folder);
+		run(cmd, true);
+	}
+	return;
 }
 
 // ======================== POLYFILLS FOR ARRAYS ===============================
@@ -288,7 +302,7 @@ String.prototype.repeat = function (count) {
 
 // getWellselection() as String method. See below for getWellselection as function.
 String.prototype.getWellselection = function (plateType) {
-	return getWellselection(this,plateType);
+	return getWellselection(this, plateType);
 }
 
 // ======================= BASE64 ENCODING/DECODING FUNCTIONS ==================
@@ -432,13 +446,14 @@ function plateInfo (plateName) {
 					wellBottom: "WELL_BOTTOM_SHAPE",
 					tipCapacity: "TIP_CAPACITY"};
 	print("Retrieving parameters for labware entry \"" + plateName + "\"");
-	// Create plateInfo work folder.
+	// Create PlateInfo work folder.
 	// C:/VWorks Workspace must be user writable (it usually is).
-	var outPath = "C:/VWorks Workspace/Temp/plateInfo/";
-	var cmd = "cmd /c mkdir \"" + outPath + "\"";
+	var outPath = "C:/VWorks Workspace/Temp/PlateInfo/";
 	var f = new File();
 	//make sure that outPath exists
-	if (!f.Exists(outPath)) run(cmd, true);		
+	//var cmd = "cmd /c mkdir \"" + outPath + "\"";
+	//if (!f.Exists(outPath)) run(cmd, true);		
+	ensureFolderExists(outPath);
 	if (isVWorks14()) { 
 		var getQuery = function (q) {
 			var queryTemplate = "//value[@name=\"##@@##\"]/@value";
@@ -504,6 +519,8 @@ function plateInfo (plateName) {
 	return resObj
 }
 
+// ------------------------------------------------------------------------------
+
 // This function returns a time stamp in the format "YYYY-MM-DD_hh-mm-ss"
 function getTimeStamp () {
 	//creating timestamp
@@ -517,58 +534,40 @@ function getTimeStamp () {
 	return  [[YYYY,MM,DD].join("-"),[hh,mm,ss].join("-")].join("_")
  }
 
-// This function adds a line to a custom log file creating the path if not existent. 
+// ------------------------------------------------------------------------------
+
+// This is a contructor that returns an object that adds a line to a custom log file creating the path if not existent. 
 // If fileOrTask is the task object then the output file is automatically set to
-// C:\VWorks Workspace\Outputs\<protocol name>_out.txt.
-// If txtLine is an array its elements are automatically join()'ed with tabs (as in usual VWorks logs).  
-function customLog (txtLine, fileOrTask, overwrite) {
-	var fileName = "", f = new File()
-	if (typeof fileOrTask === "object") {
-		if (typeof fileOrTask.getProtocolName === "function") {
-			var tmp = (fileOrTask.getProtocolName().replace(/\\/g,"/").split("/").pop())
-			tmp = tmp.slice(0,tmp.lastIndexOf("."))
-			fileName = "C:/VWorks Workspace/Outputs/" + tmp + "_out.txt"
-		}
-		else {
-			print("customLog: no getProtocolName() method in passed object"); return
-		}
-	}
-	fileName = (fileName || fileOrTask).toString().replace(/\\/g,"/")
-	if (!fileName) {print("customLog: no fileName given"); return}
-	if (fileName.indexOf("/") === -1) {print("customLog: complete file path needed"); return}
-	var path = (fileName.split("/")).slice(0,-1).join("/")
-	if (!f.Exists(path)) run("cmd /c mkdir \"" + path + "\"" , true)
-	f.Open(fileName, overwrite)
-	f.Write((isArray(txtLine) ? txtLine.join("\t") : txtLine) + "\n")
-	f.Close()
-	return true
- }
-
- // Here's another, but this time it is a constructor
+// C:\VWorks Workspace\CustomLogs\<protocol name>_out.txt.
+// In the log method, if txtLine is an array its elements are automatically join()'ed with the selected separator. 
  function CustomLog (fileOrTask, sep) {
-	var fileName = "", f = new File()
+	var sep = sep || "\t";
+	var fileName = "", f = new File();
 	if (typeof fileOrTask === "object") {
 		if (typeof fileOrTask.getProtocolName === "function") {
-			var tmp = (fileOrTask.getProtocolName().replace(/\\/g,"/").split("/").pop())
-			tmp = tmp.slice(0,tmp.lastIndexOf("."))
-			fileName = "C:/VWorks Workspace/Output/" + tmp + "_out.txt"
+			var tmp = (fileOrTask.getProtocolName().replace(/\\/g,"/").split("/").pop());
+			tmp = (tmp.split("."))[0];
+			fileName = "C:/VWorks Workspace/CustomLogs/" + tmp + "_out.txt";
 		}
 		else {
-			print("customLog: no getProtocolName() method in passed object"); return
+			print("customLog: no getProtocolName() method in passed object. Is it a \"task\" object?"); 
+			return;
 		}
 	}
-	fileName = (fileName || fileOrTask).toString().replace(/\\/g,"/")
-	if (!fileName) {print("CustomLog: no fileName given"); return}
-	if (fileName.indexOf("/") === -1) {print("CustomLog: complete file path needed"); return}
-	var path = (fileName.split("/")).slice(0,-1).join("/")
-	if (!f.Exists(path)) run("cmd /c mkdir \"" + path + "\"" , true)
+	fileName = (fileName || fileOrTask).toString().replace(/\\/g,"/");
+	if (!fileName) {print("CustomLog: no fileName provided."); return};
+	if (fileName.indexOf("/") === -1) {print("CustomLog: complete file path needed."); return};
+	var path = (fileName.split("/")).slice(0,-1).join("/");
+	//if (!f.Exists(path)) run("cmd /c mkdir \"" + path + "\"" , true);
+	ensureFolderExists(path);
 	this.log = function (txtLine, overwrite) {
-		f.Open(fileName, overwrite)
-		f.Write((isArray(txtLine) ? txtLine.join(sep) : txtLine) + "\n")
-		f.Close()
+		f.Open(fileName, overwrite);
+		f.Write((isArray(txtLine) ? txtLine.join(sep) : txtLine) + "\n");
+		f.Close();
 	}
  }
 
+// ------------------------------------------------------------------------------
 
 // This functions is useful when one needs to check several possible errors 
 // and return the total "OR"ed cumulative error at the end. _error will be placed in a closure. 
@@ -577,63 +576,65 @@ function customLog (txtLine, fileOrTask, overwrite) {
 // error.set(true) // or false
 // error.get() 
 function errorFactory () {
-	var _error = false, _errorOld = false
-	var _errorText = "", _errorTextOld = ""
-	var myError = {}
+	var _error = false, _errorOld = false;
+	var _errorText = "", _errorTextOld = "";
+	var myError = {};
 	myError.set = function (value, text) {
-		_errorOld = _error
-		_error = _error || !!value
-		if (value && text) this.setText(text) 
+		_errorOld = _error;
+		_error = _error || !!value;
+		if (value && text) this.setText(text);
 	}
 	myError.setText = function (text) {
-		if (!text) return
-		_errorTextOld = _errorText
-		_errorText += text + "\n"
+		if (!text) return;
+		_errorTextOld = _errorText;
+		_errorText += text + "\n";
 	}
-	myError.get = function () {return _error}
-	myError.getText = function () {return _errorText}
+	myError.get = function () {return _error};
+	myError.getText = function () {return _errorText};
 	myError.revert = function () {
-		_error = _errorOld
-		_errorText = _errorTextOld
+		_error = _errorOld;
+		_errorText = _errorTextOld;
 	}
 	myError.clear = function() {
-		_error = false
-		_errorText = ""
+		_error = false;
+		_errorText = "";
 	}
-	return myError
+	return myError;
 }
 
-// The following methods are useful when one needs to extract all variables from a form 
+// ------------------------------------------------------------------------------
+
+// The following constructor is useful when one needs to extract all variables from a form 
 // having a certain prefix and store them in a JSON file. 
 // The form variables are supposed to be in the global context and will be placed 
 // in the global context when read from JSON file. 
-var formManager = {} 
-formManager.save = function (prefix, fileName) {
-	var gObj = GetGlobalObject() 
-	var jObj = {}  
-    for (var p in gObj) if (gObj.hasOwnProperty(p) && !p.indexOf(prefix)) jObj[p] = gObj[p]
-	var jsonString = JSON.stringify(jObj) 
-	print("Saving the following JSON string: " + jsonString) 
-	var f = new File()
-	f.Open(fileName,true)
-	f.Write(jsonString)
-	f.Close()
-}
-formManager.load = function (prefix, fileName) {
-	var gObj = GetGlobalObject()
-	var f = new File()
-	if (f.Exists(fileName)) {
-		f.Open(fileName)
-		var jsonString = f.Read() 
-		f.Close()
-		print("Loading the following JSON string: " + jsonString)
-		var jObj = JSON.parse(jsonString)
-		for (var p in jObj) if (jObj.hasOwnProperty(p) && !p.indexOf(prefix)) gObj[p] = jObj[p]
+function FormManager (prefix,fileName) {
+	var gObj = GetGlobalObject();
+	this.save = function () { 
+		var jObj = {};  
+		for (var p in gObj) if (gObj.hasOwnProperty(p) && p.indexOf(prefix)===0) jObj[p] = gObj[p];
+		var jsonString = JSON.stringify(jObj);
+		print("Saving the following JSON string: " + jsonString); 
+		var f = new File();
+		f.Open(fileName,true);
+		f.Write(jsonString);
+		f.Close();
+	};
+	this.load = function () {
+		var f = new File();
+		if (f.Exists(fileName)) {
+			f.Open(fileName);
+			var jsonString = f.Read();
+			f.Close();
+			print("Loading the following JSON string: " + jsonString);
+			var jObj = JSON.parse(jsonString);
+			for (var p in jObj) if (jObj.hasOwnProperty(p) && p.indexOf(prefix)===0) gObj[p] = jObj[p];
+		}
+		else {
+			print("File " + fileName + " does not exist!")
+		}
 	}
-	else {
-		print("File " + fileName + " does not exist!")
-	}
-}
+};
 
 // This function returns an object whose nRows and nCols properties
 // contain the number of rows and cols for the given format.
@@ -648,12 +649,12 @@ function formatToDimensions(format) {
 		96: {nRows: 8,nCols:12},
 		384:  {nRows: 16,nCols:24},
 		1536:  {nRows: 32,nCols:48}
-	}
+	};
 	if (!formatConv.hasOwnProperty(format)) {
 		print("formatToDimensions: wrong format")
 		return false
-	}
-	return formatConv[format]
+	};
+	return formatConv[format];
 }
 
 // This function converts a well address to an index.
@@ -665,79 +666,80 @@ function formatToDimensions(format) {
 // format: number of wells in the plate (see getWellselection())  
 function wellToIndex(well,mode,format) {
 	if (!well) {
-		print("wellToIndex: no well address provided")
-		return false
+		print("wellToIndex: no well address provided");
+		return false;
 	}
 	if (mode !== "bycol" && mode !== "byrow" ) {
-		print("wellToIndex: wrong mode")
-		return false
+		print("wellToIndex: wrong mode");
+		return false;
 	}
-	var dims = formatToDimensions(format) 
+	var dims = formatToDimensions(format);
 	if (!dims) {
-		print("wellToIndex: wrong format")
-		return false
+		print("wellToIndex: wrong format");
+		return false;
 	}
-	var wellsel = getWellselection(well,format)
+	var wellsel = getWellselection(well,format);
 	if (!wellsel) {
-		print("wellToIndex: wrong well for given format")
-		return false
+		print("wellToIndex: wrong well for given format");
+		return false;
 	}
-	var row = wellsel[0]
-	var col = wellsel[1]
+	var row = wellsel[0];
+	var col = wellsel[1];
 	if (mode === "byrow") {
-		return (row-1)*dims.nCols + col - 1
+		return (row-1)*dims.nCols + col - 1;
 	}
 	else if (mode === "bycol") {
-		return (col-1)*dims.nRows + row - 1
+		return (col-1)*dims.nRows + row - 1;
 	} 
 }
 
 // This function uses an index as described in wellToIndex() to generate
 // corresponding wellselection (as array, not array of arrays)
 function indexToWellselection (index,mode,format) {
-	var row, col
+	var row, col;
 	if (!index) {
-		print("indexToWellselection: no index provided")
-		return false
+		print("indexToWellselection: no index provided");
+		return false;
 	}
 	if (mode !== "bycol" && mode !== "byrow" ) {
-		print("indexToWellselection: wrong mode")
-		return false
+		print("indexToWellselection: wrong mode");
+		return false;
 	}
-	var dims = formatToDimensions(format) 
+	var dims = formatToDimensions(format);
 	if (!dims) {
-		print("indexToWellselection: wrong format")
-		return false
+		print("indexToWellselection: wrong format");
+		return false;
 	}
 	if (mode === "byrow") {
-		row = 1 + Math.floor(index/dims.nCols)
-		col = 1 + index % dims.nCols
+		row = 1 + Math.floor(index/dims.nCols);
+		col = 1 + index % dims.nCols;
 	}
 	else if (mode === "bycol") {
-		row = 1 + index % dims.nRows
-		col = 1 + Math.floor(index/dims.nRows)
+		row = 1 + index % dims.nRows;
+		col = 1 + Math.floor(index/dims.nRows);
 	}
-	return [row,col]
+	return [row,col];
 }
 	
 // This function transform a wellselection ARRAY (not array of arrays) 
 // into a well address
 function wellselectionToWell (ws,pad) {
 	if (!ws) {
-		print("wellselectioToWell: no wellselection provided")
-		return false
+		print("wellselectioToWell: no wellselection provided");
+		return false;
 	}
-	var row = ws[0]
-	var col = ws[1]
-	var string = String.fromCharCode(65+(row-1)%26)
-	if (Math.floor((row-1)/26) > 0) string += string
-	return string+ ( "0000" + col).slice(-(pad ? pad : string.length)) 
+	var row = ws[0];
+	var col = ws[1];
+	var string = String.fromCharCode(65+(row-1)%26);
+	if (Math.floor((row-1)/26) > 0) string += string;
+	return string+ ( "0000" + col).slice(-(pad ? pad : string.length));
 }
 
 // end of VWorksExtLib.js
 print("*** VWorksExtLib.js successfully loaded ***")
 
 // finally load public domain JSON library (VWorks version)
+// Thanks to Douglas Crockford: https://github.com/douglascrockford/JSON-js
 (function() {
 	var JSONLib = "C:/VWorks Workspace/VWorksExtLib/json2.js"
 	var f = new File()
