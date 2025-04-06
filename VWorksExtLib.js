@@ -127,7 +127,7 @@ Array.prototype.forEach = function(callback, thisArg) {
 	// Sparse arrays will still be sparse and callback will not be invoked on them. 
     for(var i=0; i<this.length; i++){
 		if (!(i in this)) continue;
-        callback.apply(thisArg, [this[i], i, this]);
+        this[i] = callback.apply(thisArg, [this[i], i, this]);
     }
 }
 
