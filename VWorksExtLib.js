@@ -2,7 +2,7 @@
 // Mauro A. Cremonini - Agilent Technologies
 // (Credits where credit is due.)
 
-// ======================== GENERAL FUNCTIONS ===============================
+// ======================== GENERAL PURPOSE FUNCTIONS ===============================
 
 // this function returns true if run on VWorks 14.x else returns false
 function isVWorks14() {
@@ -241,7 +241,6 @@ Array.prototype.at = function (index) {
 
 // ------------------------------------------------------------------------------
 
-// This is useful for shuffling an array
 // (Fisher-Yates Shuffle Algorithm)
 Array.prototype.shuffle = function () {
     var arr = this.slice(); //shallow copy
@@ -269,22 +268,10 @@ String.prototype.trim = function () {
 // This is a duplication of padStart... but esier to use. 
 String.prototype.zeropad = function (digits) {
 	var digits = parseInt(digits);
-	if (digits < 1 || isNaN(digits)) {print("zeropad: bad input"); return};
-	var z = "";
-	for (var i = 0; i < digits-1; i++) z += "0";
-	return (z + this).slice(-digits);
-}
-
-// ------------------------------------------------------------------------------
-
-// Zero-padding a string to "digits" using "chr" -- now using the official name
-String.prototype.padStart = function (digits, chr) {
-	var digits = parseInt(digits); 
-	var chr = chr[0] || "0";
-	if (digits < 1 || isNaN(digits)) {print("padStart: bad input"); return;};
-	var pad = "";
-	for (var i = 0; i < digits-1; i++) pad += chr;
-	return (pad + this).slice(-digits); 
+	if (digits < 1 || isNaN(digits)) {print("zeropad: bad input"); return this};
+	//var z = "";
+	//for (var i = 0; i < digits-1; i++) z += "0";
+	return ("0".repeat(digits) + this).slice(-digits);
 }
 
 // ------------------------------------------------------------------------------
@@ -427,7 +414,7 @@ function getWellselection (well,plateType) {
 
 // ------------------------------------------------------------------------------
 
-// This function pulls information about labware from the registry (VWorks 13) 
+// This function pulls labware information from the registry (VWorks 13) 
 // or the roiZip record (VWorks 14) and returns an object with labware's parameters. 	
 // Updated for VWorks 14 (Jan 2023)
 // Improved VWorks 13 part: now it makes sure that labware exists before calling reg.Read() (Apr 2025).
@@ -524,20 +511,21 @@ function plateInfo (plateName) {
 // This function returns a time stamp in the format "YYYY-MM-DD_hh-mm-ss"
 function getTimeStamp () {
 	//creating timestamp
-	var myDate = new Date()
-	var YYYY = myDate.getFullYear()
-	var MM = ("0"+(myDate.getMonth() + 1)).slice(-2)
-	var DD = ("0"+myDate.getDate()).slice(-2)
-	var hh = ("0"+myDate.getHours()).slice(-2)
-	var mm = ("0"+myDate.getMinutes()).slice(-2)
-	var ss = ("0"+myDate.getSeconds()).slice(-2)
-	return  [[YYYY,MM,DD].join("-"),[hh,mm,ss].join("-")].join("_")
+	var myDate = new Date();
+	var YYYY = myDate.getFullYear();
+	var MM = String(myDate.getMonth() + 1).zeropad(2);
+	var DD = String(myDate.getDate()).zeropad(2);
+	var hh = String(myDate.getHours()).zeropad(2);
+	var mm = String(myDate.getMinutes()).zeropad(2);
+	var ss = String(myDate.getSeconds()).zeropad(2);
+	return  [[YYYY,MM,DD].join("-"),[hh,mm,ss].join("-")].join("_");
  }
 
 // ------------------------------------------------------------------------------
 
-// This is a contructor that returns an object that adds a line to a custom log file creating the path if not existent. 
-// If fileOrTask is the task object then the output file is automatically set to
+// This is a contructor that returns an object with a method "log" 
+// that adds a line to a custom log file, creating the path if not existent. 
+// If fileOrTask is the "task" object then the output file is automatically set to
 // C:\VWorks Workspace\CustomLogs\<protocol name>_out.txt.
 // In the log method, if txtLine is an array its elements are automatically join()'ed with the selected separator. 
  function CustomLog (fileOrTask, sep) {
@@ -570,10 +558,11 @@ function getTimeStamp () {
 // ------------------------------------------------------------------------------
 
 // This functions is useful when one needs to check several possible errors 
-// and return the total "OR"ed cumulative error at the end. _error will be placed in a closure. 
+// and return the total OR'ed cumulative error at the end.  
 // use it in this way:
 // error = errorFactory()
-// error.set(true) // or false
+// error.set(<CONDITION TO BE CHECKED>) 
+// error.setText("Error text")
 // error.get() 
 function errorFactory () {
 	var _error = false, _errorOld = false;
@@ -604,9 +593,9 @@ function errorFactory () {
 
 // ------------------------------------------------------------------------------
 
-// The following constructor is useful when one needs to extract all variables from a form 
-// having a certain prefix and store them in a JSON file. 
-// The form variables are supposed to be in the global context and will be placed 
+// The following constructor is useful when one needs to extract from a form 
+// all variables that have a certain prefix and store them in a JSON file. 
+// The form variables are supposed to be in the global context and will be stored 
 // in the global context when read from JSON file. 
 function FormManager (prefix,fileName) {
 	var gObj = GetGlobalObject();
@@ -636,6 +625,8 @@ function FormManager (prefix,fileName) {
 	}
 };
 
+// ------------------------------------------------------------------------------
+
 // This function returns an object whose nRows and nCols properties
 // contain the number of rows and cols for the given format.
 // e.g. if format is 96 => nRows and nCols will be 8 and 12 
@@ -657,6 +648,8 @@ function formatToDimensions(format) {
 	return formatConv[format];
 }
 
+// ------------------------------------------------------------------------------
+
 // This function converts a well address to an index.
 // For example, in a 96-well plate, A1 has index 0 and H12 has index 95. What happens in between 
 // depends on whether the wells are selected by column or by row. 
@@ -665,6 +658,7 @@ function formatToDimensions(format) {
 // mode: "byrow" or "bycol"
 // format: number of wells in the plate (see getWellselection())  
 function wellToIndex(well,mode,format) {
+	var mode = mode.replace(/\ /,"").toLowerCase();
 	if (!well) {
 		print("wellToIndex: no well address provided");
 		return false;
@@ -693,9 +687,12 @@ function wellToIndex(well,mode,format) {
 	} 
 }
 
+// ------------------------------------------------------------------------------
+
 // This function uses an index as described in wellToIndex() to generate
 // corresponding wellselection (as array, not array of arrays)
 function indexToWellselection (index,mode,format) {
+	var mode = mode.replace(/\ /,"").toLowerCase();
 	var row, col;
 	if (!index) {
 		print("indexToWellselection: no index provided");
@@ -720,6 +717,8 @@ function indexToWellselection (index,mode,format) {
 	}
 	return [row,col];
 }
+
+// ------------------------------------------------------------------------------
 	
 // This function transform a wellselection ARRAY (not array of arrays) 
 // into a well address
@@ -732,7 +731,8 @@ function wellselectionToWell (ws,pad) {
 	var col = ws[1];
 	var string = String.fromCharCode(65+(row-1)%26);
 	if (Math.floor((row-1)/26) > 0) string += string;
-	return string+ ( "0000" + col).slice(-(pad ? pad : string.length));
+	//return string+ ( "0000" + col).slice(-(pad ? pad : string.length));
+	return string+col.zeropad(pad);
 }
 
 // end of VWorksExtLib.js
