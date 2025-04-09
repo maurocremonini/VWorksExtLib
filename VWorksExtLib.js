@@ -265,24 +265,43 @@ String.prototype.trim = function () {
 // ------------------------------------------------------------------------------
 
 // Zero-padding a string to "digits"
-// This is a duplication of padStart... but esier to use. 
 String.prototype.zeropad = function (digits) {
 	var digits = parseInt(digits);
-	if (digits < 1 || isNaN(digits)) {print("zeropad: bad input"); return this};
+	if (digits < 1 || isNaN(digits)) return this;
 	//var z = "";
 	//for (var i = 0; i < digits-1; i++) z += "0";
-	return ("0".repeat(digits) + this).slice(-digits);
+	//return ("0".repeat(digits) + this).slice(-digits);
+	return this.padStart(digits,"0");
 }
 
 // ------------------------------------------------------------------------------
 
-// Repeat string "count" times and concatenate
 String.prototype.repeat = function (count) {
 	var count = parseInt(count) || 0;
 	if (!count || count < 0 )  return this;
 	var outStr = "";
 	for (var i=0; i<count; i++) outStr += this;
 	return outStr;
+}
+
+// ------------------------------------------------------------------------------
+
+String.prototype.padStart = function (toLen, str) {
+	var len = this.length;
+	if (toLen <= len) return this;
+	var delta = toLen-len;
+	var pad = str.repeat(Math.ceil(delta/str.length)).slice(0,delta);
+	return pad+this;
+}
+
+// ------------------------------------------------------------------------------
+
+String.prototype.padEnd = function (toLen, str) {
+	var len = this.length;
+	if (toLen <= len) return this;
+	var delta = toLen-len;
+	var pad = str.repeat(Math.ceil(delta/str.length)).slice(0,delta);
+	return this+pad;
 }
 
 // ------------------------------------------------------------------------------
