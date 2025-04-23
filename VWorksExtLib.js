@@ -16,6 +16,7 @@ function isVWorks14() {
 function isArray(a) {
 	return Object.prototype.toString.call(a) === "[object Array]";
 }
+Array.isArray = isArray; // this is to emulate an Array static method
 
 // ------------------------------------------------------------------------------
 
