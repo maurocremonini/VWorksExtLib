@@ -651,14 +651,14 @@ function FormManager (prefix,fileName) {
 // e.g. if format is 96 => nRows and nCols will be 8 and 12 
 function formatToDimensions(format) {
 	var formatConv = {
-		6: {nRows: 2,nCols:3},
-		12: {nRows: 3,nCols:4},
-		24: {nRows: 4,nCols:6},
-		48: {nRows: 6,nCols:8},
-		54: {nRows: 6,nCols:9},
-		96: {nRows: 8,nCols:12},
-		384:  {nRows: 16,nCols:24},
-		1536:  {nRows: 32,nCols:48}
+		6: {nRows: 2, nCols: 3},
+		12: {nRows: 3, nCols: 4},
+		24: {nRows: 4, nCols: 6},
+		48: {nRows: 6, nCols: 8},
+		54: {nRows: 6, nCols: 9},
+		96: {nRows: 8, nCols: 12},
+		384:  {nRows: 16, nCols: 24},
+		1536:  {nRows: 32, nCols: 48}
 	};
 	if (!formatConv.hasOwnProperty(format)) {
 		print("formatToDimensions: wrong format")
@@ -753,6 +753,30 @@ function wellselectionToWell (ws,pad) {
 	//return string+ ( "0000" + col).slice(-(pad ? pad : string.length));
 	return string+col.zeropad(pad);
 }
+
+// ------------------------------------------------------------------------------
+
+// This function uses powershell and .NET to make VWorks read a sentence aloud. 
+// allowed values for voice are "Zira" and "David".
+function say (sentence, voice) {
+	var a = "Add-Type -AssemblyName System.Speech";
+	var b = "$synth = New-Object -TypeName System.Speech.Synthesis.SpeechSynthesizer";
+	var c = "$synth.SelectVoice(\\\"Microsoft " + voice + " Desktop\\\")";
+	var d = "$synth.Speak(\\\"" + sentence + "\\\")";
+	var cmd = "powershell \"" + [a,b,c,d].join(";") + "\""; 
+	run(cmd);
+}
+ 
+// ------------------------------------------------------------------------------
+
+// This function uses powershell and .NET to generate beeps.
+// Tone is in Hz, duration is in ms. 
+function beep (tone, duration) {
+	run("powershell [Console]::Beep(\""+tone+","+duration+"\")");
+}
+
+// ------------------------------------------------------------------------------
+
 // end of VWorksExtLib.js
 print("*** VWorksExtLib.js successfully loaded ***")
 
