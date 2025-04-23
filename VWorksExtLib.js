@@ -44,6 +44,33 @@ function WSArray2String(a) {
 
 // ------------------------------------------------------------------------------
 
+Object.keys = function (obj) {
+	var arr = [];
+	if (typeof obj !== "object") return arr;
+	for (var p in obj) if (obj.hasOwnProperty(p)) arr.push(p);
+	return arr;
+}
+
+// ------------------------------------------------------------------------------
+
+Object.entries = function (obj) {
+	var arr = [];
+	if (typeof obj !== "object") return arr;
+	for (var p in obj) if (obj.hasOwnProperty(p)) arr.push([p,obj[p]]);
+	return arr;
+}
+
+// ------------------------------------------------------------------------------
+
+Object.values = function (obj) {
+	var arr = [];
+	if (typeof obj !== "object") return arr;
+	for (var p in obj) if (obj.hasOwnProperty(p)) arr.push(obj[p]);
+	return arr;
+}
+
+// ------------------------------------------------------------------------------
+
 function ensureFolderExists (folder) {
 	var f = new File();
 	var cmd = "cmd /c mkdir \"" + folder + "\"";
