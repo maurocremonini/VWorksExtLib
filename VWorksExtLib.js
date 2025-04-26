@@ -13,10 +13,10 @@ function isVWorks14() {
 
 // isArray returns true or false
 // if the passed argument is an array
-function isArray(a) {
+Array.isArray = function (a) {
 	return Object.prototype.toString.call(a) === "[object Array]";
 }
-Array.isArray = isArray; // this is to emulate an Array static method
+isArray = Array.isArray; // shorter to write :-)
 
 // ------------------------------------------------------------------------------
 
@@ -53,19 +53,19 @@ Object.keys = function (obj) {
 
 // ------------------------------------------------------------------------------
 
-Object.entries = function (obj) {
+Object.values = function (obj) {
 	var arr = [];
 	if (typeof obj !== "object") return arr;
-	for (var p in obj) if (obj.hasOwnProperty(p)) arr.push([p,obj[p]]);
+	for (var p in obj) if (obj.hasOwnProperty(p)) arr.push(obj[p]);
 	return arr;
 }
 
 // ------------------------------------------------------------------------------
 
-Object.values = function (obj) {
+Object.entries = function (obj) {
 	var arr = [];
 	if (typeof obj !== "object") return arr;
-	for (var p in obj) if (obj.hasOwnProperty(p)) arr.push(obj[p]);
+	for (var p in obj) if (obj.hasOwnProperty(p)) arr.push([p,obj[p]]);
 	return arr;
 }
 
@@ -80,6 +80,28 @@ function ensureFolderExists (folder) {
 	}
 	return;
 }
+// ------------------------------------------------------------------------------
+
+function speak (text, voiceNum, volume, waitUntilCompletion) {
+	// voiceNum is 0 for "MS David" voice and 1 for "MS Zira" 
+	var a = "$s=New-Object -ComObject Sapi.SpVoice";
+	var b = "$s.Voice=$s.GetVoices().Item("+voiceNum+")"; 
+	var c = "$s.Volume="+volume; // 0 - 100
+	var d = "$s.Speak(\\\"" + text + "\\\")";
+	cmd = "cmd /c powershell \"" + [a,b,c,d].join(";") + "\"" ;
+	print("Running: " + cmd);
+	run(cmd, waitUntilCompletion);
+ }
+ 
+// ------------------------------------------------------------------------------
+
+// This function uses powershell and .NET to generate beeps.
+// Tone is in Hz, duration is in ms. 
+function beep(freqHz, durMs, waitUntilCompletion) {
+	var cmd = "cmd /c powershell \"[Console]::Beep("+freqHz+","+durMs+")\"";
+	print("Running: " + cmd);  
+	run(cmd, waitUntilCompletion);
+ }
 
 // ======================== POLYFILLS FOR ARRAYS ===============================
 
@@ -217,7 +239,7 @@ Array.prototype.reduce = function(callback, initialValue) {
 	// I can't really throw errors in VWorks...
 	if (this.length === 0 && !initialValue) {
 		print("Error in reduce");
-		return "ERROR";
+		throw new TypeError("Reduce failed");
 	}
 	// edge case #1
 	if (this.length === 0 && initialValue) return initialValue;
@@ -304,16 +326,6 @@ String.prototype.zeropad = function (digits) {
 
 // ------------------------------------------------------------------------------
 
-String.prototype.repeat = function (count) {
-	var count = parseInt(count) || 0;
-	if (!count || count < 0 )  return this;
-	var outStr = "";
-	for (var i=0; i<count; i++) outStr += this;
-	return outStr;
-}
-
-// ------------------------------------------------------------------------------
-
 String.prototype.padStart = function (toLen, str) {
 	var len = this.length;
 	if (toLen <= len) return this;
@@ -334,6 +346,16 @@ String.prototype.padEnd = function (toLen, str) {
 
 // ------------------------------------------------------------------------------
 
+String.prototype.repeat = function (count) {
+	var count = parseInt(count) || 0;
+	if (!count || count < 0 )  return this;
+	var outStr = "";
+	for (var i=0; i<count; i++) outStr += this;
+	return outStr;
+}
+
+// ------------------------------------------------------------------------------
+
 // getWellselection() as String method. See below for getWellselection as function.
 String.prototype.getWellselection = function (plateType) {
 	return getWellselection(this, plateType);
@@ -348,7 +370,7 @@ function btoa (inStr) {
     var lastPos = inStr.length - 1 
     var i = -1, tmp, encoded = ""
 	while (i < lastPos) {
-        tmp = inStr.charCodeAt(++i) << 16 |  inStr.charCodeAt(++i) << 8 | inStr.charCodeAt(++i)
+        tmp = inStr.charCodeAt(++i) << 16 | inStr.charCodeAt(++i) << 8 | inStr.charCodeAt(++i)
 		encoded += alphabet[(tmp >>> 18) & 0x3F] + alphabet[(tmp >>> 12) & 0x3F] + alphabet[(tmp >>> 6) & 0x3F] + alphabet[tmp & 0x3F]
 	}
 	var remChars = inStr.length % 3
@@ -604,42 +626,6 @@ function getTimeStamp () {
 
 // ------------------------------------------------------------------------------
 
-// This functions is useful when one needs to check several possible errors 
-// and return the total OR'ed cumulative error at the end.  
-// use it in this way:
-// error = errorFactory()
-// error.set(<CONDITION TO BE CHECKED>) 
-// error.setText("Error text")
-// error.get() 
-function errorFactory () {
-	var _error = false, _errorOld = false;
-	var _errorText = "", _errorTextOld = "";
-	var myError = {};
-	myError.set = function (value, text) {
-		_errorOld = _error;
-		_error = _error || !!value;
-		if (value && text) this.setText(text);
-	}
-	myError.setText = function (text) {
-		if (!text) return;
-		_errorTextOld = _errorText;
-		_errorText += text + "\n";
-	}
-	myError.get = function () {return _error};
-	myError.getText = function () {return _errorText};
-	myError.revert = function () {
-		_error = _errorOld;
-		_errorText = _errorTextOld;
-	}
-	myError.clear = function() {
-		_error = false;
-		_errorText = "";
-	}
-	return myError;
-}
-
-// ------------------------------------------------------------------------------
-
 // The following constructor is useful when one needs to extract from a form 
 // all variables that have a certain prefix and store them in a JSON file. 
 // The form variables are supposed to be in the global context and will be stored 
@@ -783,28 +769,6 @@ function wellselectionToWell (ws,pad) {
 }
 
 // ------------------------------------------------------------------------------
-
-// This function uses powershell and .NET to make VWorks read a sentence aloud. 
-// allowed values for voice are "Zira" and "David".
-function say (sentence, voice) {
-	var a = "Add-Type -AssemblyName System.Speech";
-	var b = "$synth = New-Object -TypeName System.Speech.Synthesis.SpeechSynthesizer";
-	var c = "$synth.SelectVoice(\\\"Microsoft " + voice + " Desktop\\\")";
-	var d = "$synth.Speak(\\\"" + sentence + "\\\")";
-	var cmd = "powershell \"" + [a,b,c,d].join(";") + "\""; 
-	run(cmd);
-}
- 
-// ------------------------------------------------------------------------------
-
-// This function uses powershell and .NET to generate beeps.
-// Tone is in Hz, duration is in ms. 
-function beep (tone, duration) {
-	run("powershell [Console]::Beep(\""+tone+","+duration+"\")");
-}
-
-// ------------------------------------------------------------------------------
-
 // end of VWorksExtLib.js
 print("*** VWorksExtLib.js successfully loaded ***")
 
