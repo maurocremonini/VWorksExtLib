@@ -554,8 +554,9 @@ function plateInfo (plateName) {
 		var regCmd = "cmd /c reg query \"" + myKey2 +"\" /v NAME 2> \"" + regFileName + "\"";
 		run(regCmd,true);
 		f.Open(regFileName);
-		if (f.Read().indexOf("ERROR:") > -1) {
-			f.Close();
+		var content = f.Read();
+		f.Close();
+		if (content.indexOf("ERROR:") > -1) {
 			print("plateInfo: labware " + plateName + " not found");
 			return; 
 		}
