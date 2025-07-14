@@ -84,6 +84,8 @@ function ensureFolderExists (folder) {
 
 function speak (text, voiceNum, volume, waitUntilCompletion) {
 	// voiceNum is 0 for "MS David" voice and 1 for "MS Zira" 
+	voiceNum = voiceNum || 1;
+	volume = volume || 100;
 	var a = "$s=New-Object -ComObject Sapi.SpVoice";
 	var b = "$s.Voice=$s.GetVoices().Item("+voiceNum+")"; 
 	var c = "$s.Volume="+volume; // 0 - 100
