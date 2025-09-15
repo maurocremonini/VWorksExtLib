@@ -4,15 +4,14 @@
 
 // ======================== GENERAL PURPOSE FUNCTIONS ===============================
 
-// this function returns true if run on VWorks 14.x else returns false
+// This function returns true if run on VWorks 14.x and false otherwise.
 function isVWorks14() {
 	return (typeof IsCompliantMode === "function");
 }
 
 // ------------------------------------------------------------------------------
 
-// isArray returns true or false
-// if the passed argument is an array
+// isArray returns true or false if the passed argument is an array.
 Array.isArray = function (a) {
 	return Object.prototype.toString.call(a) === "[object Array]";
 }
@@ -21,7 +20,7 @@ isArray = Array.isArray; // shorter to write :-)
 // ------------------------------------------------------------------------------
 
 // isWSArray returns true if the passed argument is an array 
-// of 2-element arrays that can be used for task.Wellselection
+// of 2-element arrays that can be used for task.Wellselection.
 function isWSArray(a) {
 	if (!isArray(a)) return false;
 	// check all elements for "Array-ness"
@@ -33,8 +32,8 @@ function isWSArray(a) {
 
 // ------------------------------------------------------------------------------
 
-// WSArray2String returns a "task.wellselection-like" string 
-// useful when checking AoA's for multiAsp or multiDisp
+// WSArray2String returns a "task.wellselection-like" string,
+// useful when checking AoA's for multiAsp or multiDisp.
 function WSArray2String(a) {
 	if (!isWSArray(a)) return "Not WS Array!";
 	var tmp = [];
@@ -44,6 +43,7 @@ function WSArray2String(a) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfil for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
 Object.keys = function (obj) {
 	var arr = [];
 	if (typeof obj !== "object") return arr;
@@ -53,6 +53,7 @@ Object.keys = function (obj) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/values
 Object.values = function (obj) {
 	var arr = [];
 	if (typeof obj !== "object") return arr;
@@ -62,6 +63,7 @@ Object.values = function (obj) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries
 Object.entries = function (obj) {
 	var arr = [];
 	if (typeof obj !== "object") return arr;
@@ -71,6 +73,7 @@ Object.entries = function (obj) {
 
 // ------------------------------------------------------------------------------
 
+// This function uses "mkdir" to create a folder if not existent.
 function ensureFolderExists (folder) {
 	var f = new File();
 	var cmd = "cmd /c mkdir \"" + folder + "\"";
@@ -80,10 +83,16 @@ function ensureFolderExists (folder) {
 	}
 	return;
 }
+
 // ------------------------------------------------------------------------------
 
+// This function uses powershell to make VWorks speak a text.
+// text: a string with the text to be read aloud.
+// voiceNum: an integer, 0 for "MS David" voice and 1 for "MS Zira".
+// volume: an integer in the range 0-100.
+// waitUntilCompletion: a boolean. If false the function will immediately return.
+//                      Omit this parameter for normal use. 
 function speak (text, voiceNum, volume, waitUntilCompletion) {
-	// voiceNum is 0 for "MS David" voice and 1 for "MS Zira" 
 	voiceNum = voiceNum || 1;
 	volume = volume || 100;
 	var a = "$s=New-Object -ComObject Sapi.SpVoice";
@@ -97,8 +106,10 @@ function speak (text, voiceNum, volume, waitUntilCompletion) {
  
 // ------------------------------------------------------------------------------
 
-// This function uses powershell and .NET to generate beeps.
-// Tone is in Hz, duration is in ms. 
+// This function uses powershell to generate beeps.
+// Tone is in Hz, duration is in ms. For a nice beep use beep(2500,300).
+// waitUntilCompletion: a boolean. If false the function will immediately return.
+//                      Omit this parameter for normal use. 
 function beep(freqHz, durMs, waitUntilCompletion) {
 	var cmd = "cmd /c powershell \"[Console]::Beep("+freqHz+","+durMs+")\"";
 	print("Running: " + cmd);  
@@ -107,6 +118,7 @@ function beep(freqHz, durMs, waitUntilCompletion) {
 
 // ======================== POLYFILLS FOR ARRAYS ===============================
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf
 Array.prototype.indexOf = function (x, fromIndex) {
 	// Return value:
 	// The first index of x in the array; -1 if not found.
@@ -121,7 +133,8 @@ Array.prototype.indexOf = function (x, fromIndex) {
 }
 
 // ------------------------------------------------------------------------------
-	
+
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/lastIndexOf
 Array.prototype.lastIndexOf = function (x, fromIndex) {
 	// Return value:
 	// The last index of x in the array; -1 if not found.
@@ -137,6 +150,7 @@ Array.prototype.lastIndexOf = function (x, fromIndex) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex
 Array.prototype.findIndex = function (callback, thisArg) {
 	// Return value:
 	//The index of the first element in the array that passes the test. Otherwise, -1.
@@ -148,6 +162,7 @@ Array.prototype.findIndex = function (callback, thisArg) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLastIndex
 Array.prototype.findLastIndex = function (callback, thisArg) {
 	// Return value:
 	//The index of the last element in the array that passes the test. Otherwise, -1.
@@ -159,6 +174,7 @@ Array.prototype.findLastIndex = function (callback, thisArg) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map
 Array.prototype.map = function(callback, thisArg) {
 	// Return value:
 	// A new array with each element being the result of the callback function.
@@ -173,6 +189,7 @@ Array.prototype.map = function(callback, thisArg) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
 Array.prototype.forEach = function(callback, thisArg) {
 	// Return value:
 	// None.
@@ -185,6 +202,7 @@ Array.prototype.forEach = function(callback, thisArg) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
 Array.prototype.filter = function(callback, thisArg) {
 	// Return value:
 	// A shallow copy of the given array containing just the elements that pass the test. 
@@ -199,6 +217,7 @@ Array.prototype.filter = function(callback, thisArg) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
 Array.prototype.find = function(callback, thisArg) {
 	// Return value: 
 	// The first element in the array that satisfies the provided testing function. 
@@ -211,6 +230,7 @@ Array.prototype.find = function(callback, thisArg) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every
 Array.prototype.every = function(callback, thisArg){
 	// Return value:
 	// true unless callback returns a falsy value for an array element, 
@@ -224,6 +244,7 @@ Array.prototype.every = function(callback, thisArg){
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some
 Array.prototype.some = function(callback, thisArg){
 	// Return value:
 	// false unless callback returns a truthy value for an array element, 
@@ -237,6 +258,7 @@ Array.prototype.some = function(callback, thisArg){
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
 Array.prototype.reduce = function(callback, initialValue) {
 	// I can't really throw errors in VWorks...
 	if (this.length === 0 && !initialValue) {
@@ -266,6 +288,7 @@ Array.prototype.reduce = function(callback, initialValue) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/fill
 Array.prototype.fill = function (value, start, end) {
 	var len = this.length;
 	if (len === 0) return this;
@@ -284,6 +307,7 @@ Array.prototype.fill = function (value, start, end) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at
 Array.prototype.at = function (index) {
 	var len = this.length;
 	var index = parseInt(index);
@@ -293,7 +317,7 @@ Array.prototype.at = function (index) {
 
 // ------------------------------------------------------------------------------
 
-// (Fisher-Yates Shuffle Algorithm)
+// This Array methods scrambles the elements of an array using the Fisher-Yates Shuffle Algorithm.
 Array.prototype.shuffle = function () {
     var arr = this.slice(); //shallow copy
     var len = arr.length;
@@ -309,14 +333,14 @@ Array.prototype.shuffle = function () {
 
 // ======================== POLYFILLS FOR STRINGS ===============================
 
-// remove non printable leading and trailing characters from string
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/trim
 String.prototype.trim = function () {
 	return this.replace(/^\s+|\s+$/g,"");
 }
 
 // ------------------------------------------------------------------------------
 
-// Zero-padding a string to "digits"
+// Zero-padding a string to "digits". Shorter than padStart().
 String.prototype.zeropad = function (digits) {
 	var digits = parseInt(digits);
 	if (digits < 1 || isNaN(digits)) return this;
@@ -328,6 +352,7 @@ String.prototype.zeropad = function (digits) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padStart
 String.prototype.padStart = function (toLen, str) {
 	var len = this.length;
 	if (toLen <= len) return this;
@@ -338,6 +363,7 @@ String.prototype.padStart = function (toLen, str) {
 
 // ------------------------------------------------------------------------------
 
+//Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padEnd
 String.prototype.padEnd = function (toLen, str) {
 	var len = this.length;
 	if (toLen <= len) return this;
@@ -348,6 +374,7 @@ String.prototype.padEnd = function (toLen, str) {
 
 // ------------------------------------------------------------------------------
 
+// Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/repeat
 String.prototype.repeat = function (count) {
 	var count = parseInt(count) || 0;
 	if (!count || count < 0 )  return this;
@@ -399,37 +426,31 @@ function atob (inStr) {
 
 // ======================= OTHER FUNCTIONS ======================================
 
+/*
+This function solves the problem of processing "nUnits" of something when the available maximum capacity is "maxCapacity" 
+and each unit needs to use "someCapacity". The function will return the "best" number of cycles needed to complete the action  
+and the number of units that will be processed in each cycle. "Best" here is intented as the one that makes the resulting 
+processed units per cycles as similar as possible.  
+Possible uses: 
+1. filling "nUnits" columns (with multidispense), each with "someCapacity" uL using tips having a max volume of "maxCapacity" uL.
+2. processing "nUnits" plates stored in a stacker when the available space on the Bravo amounts to "maxCapacity" locations 
+and one needs to know how many plates to use in each cycle. In case one has 3 locations available maxCapacity=3 and someCapacity=1.  
+The function returns an object whose propertes are "nCycles" (integer) and "unitsPerCycle" (array of integers of length nCycles).
+
+Test #1: get 16 plates in groups of 3 on the Bravo:
+print("=== Test with number of plates")
+pTest = {nUnits: 16,maxCapacity: 3,someCapacity: 1}
+pRes = doActionInCycles(pTest)
+print("nUnits = " + pTest.nUnits + " nCycles = " + pRes.nCycles + " unitsPerCycle = " + pRes.unitsPerCycle)
+--> nUnits = 16 nCycles = 6 unitsPerCycle = 3,3,3,3,2,2 (note that it is *not* 3,3,3,3,3,1)
+Test #2: calculate how to multidispense 30 uL to 9 columns using filtered tips whose max volume is 180 uL:
+print("=== Test with multidispense")
+vTest = {nUnits: 9,maxCapacity: 180,someCapacity: 30}
+vRes = doActionInCycles(vTest)
+print("nUnits = " + vTest.nUnits + " nCycles = " + vRes.nCycles + " unitsPerCycle = " + vRes.unitsPerCycle)
+--> nUnits = 9 nCycles = 2 unitsPerCycle = 5,4 (*not* 6,3)
+*/
 function doActionInCycles (o) {
-	/*
-	This function solves the problem of processing "nUnits" of something when the available maximum capacity is "maxCapacity" 
-	and each unit needs to use "someCapacity". The function will return the "best" number of cycles needed to complete the action  
-	and the number of units that will be processed in each cycle. "Best" here is intented as the one that makes the resulting 
-	processed units per cycles as similar as possible.  
-	Possible uses: 
-	1. filling "nUnits" columns (with multidispense), each with "someCapacity" uL using tips having a max volume of "maxCapacity" uL.
-	2. processing "nUnits" plates stored in a stacker when the available space on the Bravo amounts to "maxCapacity" locations 
-	and one needs to know how many plates to use in each cycle. In case one has 3 locations available maxCapacity=3 and someCapacity=1.  
-	The function returns an object whose propertes are "nCycles" (integer) and "unitsPerCycle" (array of integers of length nCycles).
-	
-	Test #1: get 16 plates in groups of 3 on the Bravo:
-
-	print("=== Test with number of plates")
-	pTest = {nUnits: 16,maxCapacity: 3,someCapacity: 1}
-	pRes = doActionInCycles(pTest)
-	print("nUnits = " + pTest.nUnits + " nCycles = " + pRes.nCycles + " unitsPerCycle = " + pRes.unitsPerCycle)
-
-	--> nUnits = 16 nCycles = 6 unitsPerCycle = 3,3,3,3,2,2 (note that it is *not* 3,3,3,3,3,1)
-
-	Test #2: calculate how to multidispense 30 uL to 9 columns using filtered tips whose max volume is 180 uL:
-
-	print("=== Test with multidispense")
-	vTest = {nUnits: 9,maxCapacity: 180,someCapacity: 30}
-	vRes = doActionInCycles(vTest)
-	print("nUnits = " + vTest.nUnits + " nCycles = " + vRes.nCycles + " unitsPerCycle = " + vRes.unitsPerCycle)
-
-	--> nUnits = 9 nCycles = 2 unitsPerCycle = 5,4 (*not* 6,3)
-	*/
-
 	var props = ["someCapacity","nUnits","maxCapacity"];
 	if (typeof(o) !== "object") {
 		print("Argument is not an object!");
@@ -459,6 +480,8 @@ function doActionInCycles (o) {
 
 // ------------------------------------------------------------------------------
 
+// This function returns the wellselection array corresponding to a certain well address.
+// If a well address does not belong to the chosen format ("platetype"), it returns false.
 function getWellselection (well,plateType) {
 	// 2023-01-23 v 1.0
 	var filterSpaces = /[^A-Z0-9]/g;
@@ -580,7 +603,7 @@ function plateInfo (plateName) {
 
 // ------------------------------------------------------------------------------
 
-// This function returns a time stamp in the format "YYYY-MM-DD_hh-mm-ss"
+// This function returns a time stamp in the format "YYYY-MM-DD_hh-mm-ss".
 function getTimeStamp () {
 	//creating timestamp
 	var myDate = new Date();
@@ -629,11 +652,12 @@ function getTimeStamp () {
 
 // ------------------------------------------------------------------------------
 
-// The following constructor is useful when one needs to extract from a form 
-// all variables that have a certain prefix and store them in a JSON file. 
+// The following constructor is useful when one needs to extract the variables  
+// from a form that have a certain prefix and store them in a JSON file. 
 // The form variables are supposed to be in the global context and will be stored 
 // in the global context when read from JSON file. 
 function FormManager (prefix,fileName) {
+	// add test for the existance of JSON.xxxx
 	var gObj = GetGlobalObject();
 	this.save = function () { 
 		var jObj = {};  
