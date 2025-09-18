@@ -15,7 +15,7 @@ Having used VWorks' JS for almost ten years now I must say that it has all the e
 
 While I certainly could not add the missing features to make VWorks' ES3 look like ES5 (there are [more specialized and professional projects](https://github.com/zloirock/core-js) for this), I decided to work on the missing methods and added some so-called "polyfills" that made my programming life easier along all these years. 
 
-What I think makes this library special, though, is the fact that it was written for VWorks and the VWorks programmers. In fact, this library sports specific functions and methods that turn tedious protocol programming tasks into single calls. For example, `getWellselection()` converts a well address (for example "G10") to its wellselection form (`[7,10]`) and `plateInfo()` returns an object of plate parameters taken from the labware editor (and it works for both VWorks 13 and 14). These and more are described in the user manual below. 
+What I think makes this library special, though, is the fact that it was written for VWorks and the VWorks programmers. In fact, this library sports specific functions and methods that turn tedious protocol programming tasks into single calls. For example, `getWellselection()` converts a well address (for example "G10") to its wellselection form (`[7,10]`) and `plateInfo()` returns an object of plate parameters taken from the labware editor (and it works for both VWorks 13 and 14). These and more are described in the comments added to each of the functions and methods included in this library. 
 
 Happy VWorks protocol programming!
 
