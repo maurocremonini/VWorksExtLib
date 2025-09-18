@@ -390,6 +390,54 @@ String.prototype.getWellselection = function (plateType) {
 	return getWellselection(this, plateType);
 }
 
+// ======================= NEW METHODS FOR THE FILE() CONSTRUCTOR ==================
+
+File.prototype.setFilename = function (fn, fixSlash) {
+	if (!fn) {print("setFilename: no filename provided."); return false};
+	this.filename = fixSlash ?  fn.replace(/\\/g,"/") : fn;
+}
+
+File.prototype.readFile = function () {
+	if (!this.filename) {print("readFileContent: set the filename property first."); return false};
+	if (!this.Exists(this.filename)) {print("readFileContent: file not found."); return false};
+	this.Open(this.filename);
+	this.content = this.Read();
+	this.Close();
+}
+
+File.prototype.writeFile = function (content, sep, suppressCRLF) {
+	if (!this.filename) {print("writeToFile: set the filename first."); return false}; 
+	var txt = isArray(content) ? content.join(sep) : content;
+	this.Open(this.filename, true, suppressCRLF);
+	this.Write(txt);
+	this.Close();
+}
+
+File.prototype.appendFile = function (content, sep, suppressCRLF) {
+	if (!this.filename) {print("writeToFile: set the filename first."); return false}; 
+	var txt = (isArray(content) ? content.join(sep) : content) + "\n";
+	this.Open(this.filename, false, suppressCRLF);
+	this.Write(txt);
+	this.Close();
+}
+
+File.prototype.copyFile = function (fn2, overwrite) {
+	if (!this.filename) {print("copyFile: set the filename first."); return false};
+	if (!overwrite && this.Exists(fn2)) {print("copyFile: file exists. Can't copy."); return false};
+	this.readFile();
+	var fn = this.filename;
+	this.setFilename(fn2,true)
+	this.writeFile(this.content);
+	this.filename = fn;
+}
+   
+File.prototype.deleteFile = function () {
+	if (!this.filename) {print("deleteFile: set the filename first."); return false};
+	if (this.IsOpen()) {print("deleteFile: file is open. Can't delete."); return false};
+	this.Delete(this.filename);
+};
+
+
 // ======================= BASE64 ENCODING/DECODING FUNCTIONS ==================
 // see https://base64.guru/learn/base64-algorithm/encode and wikipedia
 
@@ -528,13 +576,10 @@ function plateInfo (plateName) {
 					tipCapacity: "TIP_CAPACITY"};
 	print("Retrieving parameters for labware entry \"" + plateName + "\"");
 	// Create PlateInfo work folder.
-	// C:/VWorks Workspace must be user writable (it usually is).
+	// *** C:/VWorks Workspace must be user writable (usually, it is).
 	var outPath = "C:/VWorks Workspace/Temp/PlateInfo/";
-	var f = new File();
-	//make sure that outPath exists
-	//var cmd = "cmd /c mkdir \"" + outPath + "\"";
-	//if (!f.Exists(outPath)) run(cmd, true);		
 	ensureFolderExists(outPath);
+	var f = new File();
 	if (isVWorks14()) { 
 		var getQuery = function (q) {
 			var queryTemplate = "//value[@name=\"##@@##\"]/@value";
@@ -564,16 +609,11 @@ function plateInfo (plateName) {
 		var myKey, reg
 		var vworksPath = "C:\\Program Files (x86)\\Agilent Technologies\\VWorks\\VWorks.exe";
 		var f = new File();
-		if (f.Exists(vworksPath)) {
-			// 64 bit vworks
-			myKey = "SOFTWARE\\Wow6432Node\\Velocity11\\Shared\\Labware\\Labware_Entries\\" + plateName;
-		}
-		else {
-			// 32 bit vworks
-			myKey = "SOFTWARE\\Velocity11\\Shared\\Labware\\Labware_Entries\\" + plateName;
-		}
+		myKey = f.Exists(vworksPath) ? 
+		        "SOFTWARE\\Wow6432Node\\Velocity11\\Shared\\Labware\\Labware_Entries\\" + plateName : // 64-bit Windows
+				"SOFTWARE\\Velocity11\\Shared\\Labware\\Labware_Entries\\" + plateName; // 32-bit Windows
 		// Make sure that the labware exists in the registry
-		// otherwise reg.Read() fails and JS stops executing JS code. 
+		// otherwise reg.Read() fails and VWorks stops executing the present JS code. 
 		var myKey2 = "HKLM\\" + myKey;
 		var regFileName = outPath + "regTest.txt"; 
 		var regCmd = "cmd /c reg query \"" + myKey2 +"\" /v NAME 2> \"" + regFileName + "\"";
@@ -594,11 +634,11 @@ function plateInfo (plateName) {
 		}
 	}
 	// manipulate properties for some entries
-	resObj.labwareType = baseC[resObj.labwareType]
-	resObj.wellGeometry = wellG[resObj.wellGeometry]
-	resObj.wellBottom = wellB[resObj.wellBottom]
-	if (resObj.labwareType !== "Tip box") resObj.tipCapacity = "NA"
-	return resObj
+	resObj.labwareType = baseC[resObj.labwareType];
+	resObj.wellGeometry = wellG[resObj.wellGeometry];
+	resObj.wellBottom = wellB[resObj.wellBottom];
+	if (resObj.labwareType !== "Tip box") resObj.tipCapacity = "NA";
+	return resObj;
 }
 
 // ------------------------------------------------------------------------------
@@ -628,8 +668,9 @@ function getTimeStamp () {
 	var fileName = "", f = new File();
 	if (typeof fileOrTask === "object") {
 		if (typeof fileOrTask.getProtocolName === "function") {
-			var tmp = (fileOrTask.getProtocolName().replace(/\\/g,"/").split("/").pop());
+			var tmp = fileOrTask.getProtocolName().replace(/\\/g,"/").split("/").pop();
 			tmp = (tmp.split("."))[0];
+			ensureFolderExists("C:/VWorks Workspace/CustomLogs/");
 			fileName = "C:/VWorks Workspace/CustomLogs/" + tmp + "_out.txt";
 		}
 		else {
@@ -638,10 +679,9 @@ function getTimeStamp () {
 		}
 	}
 	fileName = (fileName || fileOrTask).toString().replace(/\\/g,"/");
-	if (!fileName) {print("CustomLog: no fileName provided."); return};
+	if (!fileName) {print("CustomLog: no fileName provided."); return false};
 	if (fileName.indexOf("/") === -1) {print("CustomLog: complete file path needed."); return};
 	var path = (fileName.split("/")).slice(0,-1).join("/");
-	//if (!f.Exists(path)) run("cmd /c mkdir \"" + path + "\"" , true);
 	ensureFolderExists(path);
 	this.log = function (txtLine, overwrite) {
 		f.Open(fileName, overwrite);
@@ -652,12 +692,15 @@ function getTimeStamp () {
 
 // ------------------------------------------------------------------------------
 
-// The following constructor is useful when one needs to extract the variables  
-// from a form that have a certain prefix and store them in a JSON file. 
+// This constructor is useful when one needs to extract variables  
+// from a form having a certain prefix and store them in a JSON file. 
 // The form variables are supposed to be in the global context and will be stored 
-// in the global context when read from JSON file. 
+// in the global context when read from the JSON file. 
 function FormManager (prefix,fileName) {
-	// add test for the existance of JSON.xxxx
+	if (typeof JSON.stringify !== "function" || typeof JSON.parse !== "function") {
+		print("No JSON object found: aborting...")
+		return false
+	}
 	var gObj = GetGlobalObject();
 	this.save = function () { 
 		var jObj = {};  
@@ -715,7 +758,7 @@ function formatToDimensions(format) {
 // depends on whether the wells are selected by column or by row. 
 // In "byrow" mode A2 has index 1, whereas in "bycol" it has index 8.
 // well: any string containing a well address
-// mode: "byrow" or "bycol"
+// mode: "byrow" or "bycol" (case insensitive)
 // format: number of wells in the plate (see getWellselection())  
 function wellToIndex(well,mode,format) {
 	var mode = mode.replace(/\ /,"").toLowerCase();
