@@ -392,11 +392,14 @@ String.prototype.getWellselection = function (plateType) {
 
 // ======================= NEW METHODS FOR THE FILE() CONSTRUCTOR ==================
 
+// fn: filepath, fixSlash: changes backslashes to forward slashes (useful for VWorks 14.x).
+// The filename is set in the "filename" property.
 File.prototype.setFilename = function (fn, fixSlash) {
 	if (!fn) {print("setFilename: no filename provided."); return false};
 	this.filename = fixSlash ?  fn.replace(/\\/g,"/") : fn;
 }
 
+// This method reads the content of the file and stores it in the "content" property
 File.prototype.readFile = function () {
 	if (!this.filename) {print("readFileContent: set the filename property first."); return false};
 	if (!this.Exists(this.filename)) {print("readFileContent: file not found."); return false};
@@ -405,6 +408,9 @@ File.prototype.readFile = function () {
 	this.Close();
 }
 
+// This method saves "content" in this.filename
+// If content is an array then the separator "sep" is used to separate the elements of the array.
+// "suppressCRLF" is passed to Open() as third argument. 
 File.prototype.writeFile = function (content, sep, suppressCRLF) {
 	if (!this.filename) {print("writeToFile: set the filename first."); return false}; 
 	var txt = isArray(content) ? content.join(sep) : content;
@@ -413,6 +419,8 @@ File.prototype.writeFile = function (content, sep, suppressCRLF) {
 	this.Close();
 }
 
+// This method appends "content" to this.filename.
+// See "writeFile" for the meaning of the parameters.
 File.prototype.appendFile = function (content, sep, suppressCRLF) {
 	if (!this.filename) {print("writeToFile: set the filename first."); return false}; 
 	var txt = (isArray(content) ? content.join(sep) : content) + "\n";
@@ -421,6 +429,8 @@ File.prototype.appendFile = function (content, sep, suppressCRLF) {
 	this.Close();
 }
 
+// This method first reads the content of this.filename and then stores it in the 
+// filepath "fn2". If fn2 exists and overwrite is false, no copy will happen. 
 File.prototype.copyFile = function (fn2, overwrite) {
 	if (!this.filename) {print("copyFile: set the filename first."); return false};
 	if (!overwrite && this.Exists(fn2)) {print("copyFile: file exists. Can't copy."); return false};
@@ -430,7 +440,8 @@ File.prototype.copyFile = function (fn2, overwrite) {
 	this.writeFile(this.content);
 	this.filename = fn;
 }
-   
+
+// This method deletes the file in this.filename, unless it is open. 
 File.prototype.deleteFile = function () {
 	if (!this.filename) {print("deleteFile: set the filename first."); return false};
 	if (this.IsOpen()) {print("deleteFile: file is open. Can't delete."); return false};
