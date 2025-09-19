@@ -2,7 +2,7 @@
 
 Hello VWorkers.
 
-welcome to Mauro's VWorks External Library!
+welcome to Mauro's VWorks Extension Library!
 
 The Agilent VWorks Automation Control software includes a very old JavaScript implementation of the Nescape Portable Runtime libraries that dates back to the late 1990's / early 2000's.
 
