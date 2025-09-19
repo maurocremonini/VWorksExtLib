@@ -1,4 +1,4 @@
-// VWorksExtLib follows
+// VWorksExtLib  - VWorks Extension Library
 // Mauro A. Cremonini - Agilent Technologies
 // (Credits where credit is due.)
 
