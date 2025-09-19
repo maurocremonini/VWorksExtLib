@@ -1,6 +1,12 @@
 // VWorksExtLib  - VWorks Extension Library
-// Mauro A. Cremonini - Agilent Technologies
-// (Credits where credit is due.)
+// Author: Mauro A. Cremonini
+// **************************** DISCLAIMER *************************************** 
+// * This project is developed and maintained in a personal capacity.            * 
+// * It is not affiliated with, endorsed by, or representative of my employer,   *
+// * Agilent Technologies. All code, opinions, and documentation are my own and  *
+// * my employer bears no responsibility for any aspect of this work.            *
+// *******************************************************************************
+// Use the code at your own risk. Credits where credit is due.
 
 // ======================== GENERAL PURPOSE FUNCTIONS ===============================
 
