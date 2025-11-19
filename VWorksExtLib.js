@@ -11,6 +11,13 @@
 //
 // ======================== GENERAL PURPOSE FUNCTIONS ===============================
 
+// This function returns the root folder for VWorksExtLib
+function getVWorksExtLibRoot() {
+	return "C:/VWorks Workspace/VWorksExtLib/"
+}
+
+// ------------------------------------------------------------------------------
+
 // This function returns true if run on VWorks 14.x and false otherwise.
 function isVWorks14() {
 	return (typeof IsCompliantMode === "function");
@@ -30,10 +37,39 @@ isArray = Array.isArray; // shorter to write :-)
 // of 2-element arrays that can be used for task.Wellselection.
 function isWSArray(a) {
 	if (!isArray(a)) return false;
-	// check all elements for "Array-ness"
-	for (var i = 0; i < a.length; i++) {
-		if (!isArray(a[i]) || a[i].length !== 2 || typeof a[i][0] !== "number" || typeof a[i][1] !== "number" ) return false;
+	var cbk = function (el) {return (isArray(el) && el.length===2 && typeof el[0] === "number" && typeof el[1] === "number")};
+	return a.every(cbk);
+}
+
+// ------------------------------------------------------------------------------
+
+// This function uses "mkdir" to create a folder if not existent.
+function ensureFolderExists (folder) {
+	var folder = folder.toBackSlashes();
+	var f = new File();
+	var cmd = "cmd /c mkdir \"" + folder + "\"";
+	if (!f.Exists(folder)) {
+		print("Creating " + folder);
+		run(cmd, true);
 	}
+	return;
+}
+
+// ------------------------------------------------------------------------------
+
+// helper function for throwing TypeErrors if callback is not a function
+function checkIfCallback (cb) {
+	if (typeof cb === "function") return;
+	var msg = "Warning: " + cb + " is not a function.";
+	print(msg);
+	throw new TypeError(msg);
+}
+
+// ------------------------------------------------------------------------------
+
+// Pause for secs seconds
+function sleep(secs) {
+	run("cmd /c timeout /nobreak /t " + secs, true);
 	return true
 }
 
@@ -41,14 +77,76 @@ function isWSArray(a) {
 
 // WSArray2String returns a "task.wellselection-like" string,
 // useful when checking AoA's for multiAsp or multiDisp.
-function WSArray2String(a) {
-	if (!isWSArray(a)) return "Not WS Array!";
-	var tmp = [];
-	for (var i = 0; i < a.length; i++) tmp.push("["+a[i][0]+","+a[i][1]+"]");
-	return tmp.join(" , ");
+function WSArrayToString(a) {
+	if (!isWSArray(a)) {return "Not WS Array"};
+	var cbk = function (acc, el, ind, arr) {acc.push("["+el.toString()+"]"); return acc;};
+	var acc = a.reduce(cbk, []);
+	return "[" + acc.join(",") + "]"
 }
 
 // ------------------------------------------------------------------------------
+
+// This function uses powershell to make VWorks speak a text.
+// text: a string with the text to be read aloud.
+// voiceNum: an integer, 0 for "MS David" voice and 1 for "MS Zira".
+// volume: an integer in the range 0-100.
+// waitUntilCompletion: a boolean. If false the function will immediately return.
+//                      Omit this parameter for normal use. 
+function speak (text, voiceNum, volume, waitUntilCompletion) {
+	voiceNum = String(voiceNum) || "1";
+	volume = volume || 100;
+	var a = "$s=New-Object -ComObject Sapi.SpVoice";
+	var b = "$s.Voice=$s.GetVoices().Item("+voiceNum+")"; 
+	var c = "$s.Volume="+volume; // 0 - 100
+	var d = "$s.Speak(\\\"" + text + "\\\")";
+	cmd = "cmd /c powershell \"" + [a,b,c,d].join(";") + "\"" ;
+	print("Running: " + cmd);
+	run(cmd, waitUntilCompletion);
+ }
+ 
+// ------------------------------------------------------------------------------
+
+// This function uses powershell to generate beeps.
+// Tone is in Hz, duration is in ms. For a nice beep use beep(2500,300).
+// waitUntilCompletion: a boolean. If false the function will immediately return.
+//                      Omit this parameter for normal use. 
+function beep(freqHz, durMs, waitUntilCompletion) {
+	var cmd = "cmd /c powershell \"[Console]::Beep("+freqHz+","+durMs+")\"";
+	run(cmd, waitUntilCompletion);
+}
+
+// ------------------------------------------------------------------------------
+
+function alert() {
+	beep(2500,300);
+}
+
+// ------------------------------------------------------------------------------
+
+function msgBox (msg, title, buttons, type) {
+	// see https://ss64.com/ps/messagebox.html
+	// Image		Value	ButtonType	Value
+	// None			0	 	OK			0
+	// Error		16	 	OKCancel	1
+	// Question		32	 	YesNoCancel	3
+	// Warning		48	 	YesNo	4
+	// Information	64	 	 	 
+	var msgBoxFile = (getVWorksExtLibRoot() + "MsgBox/response.txt").toBackSlashes();
+	ensureFolderExists(msgBoxFile.dirname());
+    var quote = function (s) {return "'" + s + "'"};
+    var pre = "cmd /c powershell \"Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show(";
+    var mb = [pre + quote(msg)];
+    mb.push(quote(title || ""));
+    mb.push(quote(buttons || "OK"));
+    mb.push(quote(type || "Information")+")");
+	var cmd = mb.join(",") + " | Out-File -Filepath '" + msgBoxFile + "' -Encoding ascii \"";
+    run(cmd, true);
+	var f = new File();
+	f.filename = msgBoxFile;
+	return f.readFile().stripEmptyLines().trim();
+}
+
+// ======================== POLYFILLS FOR OBJECTS ===============================
 
 // Polyfil for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
 Object.keys = function (obj) {
@@ -77,51 +175,6 @@ Object.entries = function (obj) {
 	for (var p in obj) if (obj.hasOwnProperty(p)) arr.push([p,obj[p]]);
 	return arr;
 }
-
-// ------------------------------------------------------------------------------
-
-// This function uses "mkdir" to create a folder if not existent.
-function ensureFolderExists (folder) {
-	var f = new File();
-	var cmd = "cmd /c mkdir \"" + folder + "\"";
-	if (!f.Exists(folder)) {
-		print("Creating " + folder);
-		run(cmd, true);
-	}
-	return;
-}
-
-// ------------------------------------------------------------------------------
-
-// This function uses powershell to make VWorks speak a text.
-// text: a string with the text to be read aloud.
-// voiceNum: an integer, 0 for "MS David" voice and 1 for "MS Zira".
-// volume: an integer in the range 0-100.
-// waitUntilCompletion: a boolean. If false the function will immediately return.
-//                      Omit this parameter for normal use. 
-function speak (text, voiceNum, volume, waitUntilCompletion) {
-	voiceNum = voiceNum || 1;
-	volume = volume || 100;
-	var a = "$s=New-Object -ComObject Sapi.SpVoice";
-	var b = "$s.Voice=$s.GetVoices().Item("+voiceNum+")"; 
-	var c = "$s.Volume="+volume; // 0 - 100
-	var d = "$s.Speak(\\\"" + text + "\\\")";
-	cmd = "cmd /c powershell \"" + [a,b,c,d].join(";") + "\"" ;
-	print("Running: " + cmd);
-	run(cmd, waitUntilCompletion);
- }
- 
-// ------------------------------------------------------------------------------
-
-// This function uses powershell to generate beeps.
-// Tone is in Hz, duration is in ms. For a nice beep use beep(2500,300).
-// waitUntilCompletion: a boolean. If false the function will immediately return.
-//                      Omit this parameter for normal use. 
-function beep(freqHz, durMs, waitUntilCompletion) {
-	var cmd = "cmd /c powershell \"[Console]::Beep("+freqHz+","+durMs+")\"";
-	print("Running: " + cmd);  
-	run(cmd, waitUntilCompletion);
- }
 
 // ======================== POLYFILLS FOR ARRAYS ===============================
 
@@ -161,11 +214,13 @@ Array.prototype.lastIndexOf = function (x, fromIndex) {
 Array.prototype.findIndex = function (callback, thisArg) {
 	// Return value:
 	//The index of the first element in the array that passes the test. Otherwise, -1.
+	checkIfCallback(callback);
 	for (var i = 0; i < this.length; i++) {
 		if (callback.apply(thisArg, [this[i], i, this])) return i
 	}
 	return -1
 }
+
 
 // ------------------------------------------------------------------------------
 
@@ -173,6 +228,7 @@ Array.prototype.findIndex = function (callback, thisArg) {
 Array.prototype.findLastIndex = function (callback, thisArg) {
 	// Return value:
 	//The index of the last element in the array that passes the test. Otherwise, -1.
+	checkIfCallback(callback);
 	for (var i = this.length-1; i >=0; i--) {
 		if (callback.apply(thisArg, [this[i], i, this])) return i
 	}
@@ -186,6 +242,7 @@ Array.prototype.map = function(callback, thisArg) {
 	// Return value:
 	// A new array with each element being the result of the callback function.
 	// Sparse arrays will still be sparse and callback will not be invoked on them. 
+	checkIfCallback(callback);
     var arr = [];
     for(var i=0; i<this.length; i++) {
 		if (!(i in this)) continue;
@@ -198,12 +255,12 @@ Array.prototype.map = function(callback, thisArg) {
 
 // Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
 Array.prototype.forEach = function(callback, thisArg) {
-	// Return value:
-	// None.
+	// Return value: none.
 	// Sparse arrays will still be sparse and callback will not be invoked on them. 
+	checkIfCallback(callback);
     for(var i=0; i<this.length; i++){
 		if (!(i in this)) continue;
-        this[i] = callback.apply(thisArg, [this[i], i, this]);
+        callback.apply(thisArg, [this[i], i, this]);
     }
 }
 
@@ -214,6 +271,7 @@ Array.prototype.filter = function(callback, thisArg) {
 	// Return value:
 	// A shallow copy of the given array containing just the elements that pass the test. 
 	// If no elements pass the test, an empty array is returned.
+	checkIfCallback(callback);
     var arr = [];
     for(var i=0; i<this.length; i++) {
 		if (!(i in this)) continue;
@@ -229,6 +287,7 @@ Array.prototype.find = function(callback, thisArg) {
 	// Return value: 
 	// The first element in the array that satisfies the provided testing function. 
 	// Otherwise, undefined is returned.
+	checkIfCallback(callback);
     for(var i=0; i<this.length; i++){
     	if (callback.apply(thisArg, [this[i], i, this])) return this[i];
     }
@@ -242,6 +301,7 @@ Array.prototype.every = function(callback, thisArg){
 	// Return value:
 	// true unless callback returns a falsy value for an array element, 
 	// in which case false is immediately returned.
+	checkIfCallback(callback);
     for(var i=0; i<this.length; i++){
 		if (!(i in this)) continue;
         if (!callback.apply(thisArg, [this[i], i, this])) return false;
@@ -256,6 +316,7 @@ Array.prototype.some = function(callback, thisArg){
 	// Return value:
 	// false unless callback returns a truthy value for an array element, 
 	// in which case true is immediately returned.
+	checkIfCallback(callback);
     for(var i=0; i<this.length; i++){
 		if (!(i in this)) continue;
         if (callback.apply(thisArg, [this[i], i, this])) return true;
@@ -267,11 +328,8 @@ Array.prototype.some = function(callback, thisArg){
 
 // Polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
 Array.prototype.reduce = function(callback, initialValue) {
-	// I can't really throw errors in VWorks...
-	if (this.length === 0 && !initialValue) {
-		print("Error in reduce");
-		throw new TypeError("Reduce failed");
-	}
+	checkIfCallback(callback);
+	if (this.length === 0 && !initialValue) {print("Error in reduce"); throw new TypeError("Reduce failed");}
 	// edge case #1
 	if (this.length === 0 && initialValue) return initialValue;
 	// edge case #2 - check for one only element somewhere
@@ -324,8 +382,22 @@ Array.prototype.at = function (index) {
 
 // ------------------------------------------------------------------------------
 
+// This Array method returns the unique elements in an array. 
+// callback: equality checker to be used for the some() method.  
+Array.prototype.unique = function (callback) {
+	checkIfCallback(callback);
+	var reduceCallback = function (acc, el) {
+		if (!acc.some(callback,el)) acc.push(el);
+		return acc;
+	}
+	return this.reduce(reduceCallback,[]);
+}
+
+// ------------------------------------------------------------------------------
+
 // This Array methods scrambles the elements of an array using the Fisher-Yates Shuffle Algorithm.
-Array.prototype.shuffle = function () {
+// OLD VERSION
+Array.prototype.shuffleOLD = function () {
     var arr = this.slice(); //shallow copy
     var len = arr.length;
     var i, r, tmp;
@@ -336,7 +408,26 @@ Array.prototype.shuffle = function () {
        arr[r] = tmp;
     }
     return arr;
- }
+}
+
+// ------------------------------------------------------------------------------
+
+// This Array methods scrambles the elements of an array using the Fisher-Yates Shuffle Algorithm.
+Array.prototype.shuffle = function () {
+	var arrCpy = this.slice();
+    var cbk = function (el, ind, arr) {
+		if (ind === arr.length-1) return arr[ind];
+		var tmp, range = arr.length - ind;
+		var rnd = Math.floor(ind + range * Math.random());
+		if (rnd === ind) return arr[ind];
+		tmp = arr[ind]; 
+		arr[ind] = arr[rnd];
+		arr[rnd] = tmp;
+		return arr[ind]
+	}
+	arrCpy.forEach(cbk);
+	return arrCpy; 
+}
 
 // ======================== POLYFILLS FOR STRINGS ===============================
 
@@ -351,9 +442,6 @@ String.prototype.trim = function () {
 String.prototype.zeropad = function (digits) {
 	var digits = parseInt(digits);
 	if (digits < 1 || isNaN(digits)) return this;
-	//var z = "";
-	//for (var i = 0; i < digits-1; i++) z += "0";
-	//return ("0".repeat(digits) + this).slice(-digits);
 	return this.padStart(digits,"0");
 }
 
@@ -397,68 +485,157 @@ String.prototype.getWellselection = function (plateType) {
 	return getWellselection(this, plateType);
 }
 
+// ------------------------------------------------------------------------------
+
+// return filename without path
+String.prototype.basename = function () {
+	return (this.split(/[\/\\]/)).at(-1);
+}
+
+// ------------------------------------------------------------------------------
+
+// return folder name with final "/"
+String.prototype.dirname = function () {
+	return (this.split(/[\/\\]/)).slice(0,-1).join("/")+"/";
+}
+
+// ------------------------------------------------------------------------------
+
+// return file extension
+String.prototype.extname = function () {
+	return (this.split(".")).at(-1);
+}
+
+// ------------------------------------------------------------------------------
+
+// turn all backslashes into forward slashes
+String.prototype.toBackSlashes = function () {
+	return this.replace(/\//g, "\\");
+}
+
+// ------------------------------------------------------------------------------
+
+// turn all backslashes into forward slashes
+String.prototype.toForwardSlashes = function () {
+	return this.replace(/\\/g, "/");
+}
+
+// ------------------------------------------------------------------------------
+
+// remove all \r, \n at the beginning of a lines and (\r)\n at end of content
+String.prototype.stripEmptyLines = function () { 
+	return this.replace(/\r/g,"").replace(/^\n/gm,"").replace(/[^\S\n\r]*\r?\n$/, "");
+}
+
+// ======================= NEW METHODS FOR THE MATH OBJECT ==================
+
+// This methods rounds to d decimal digits
+Math.roundTo = function (x, d) { 
+	var x = parseFloat(x); 
+	var d = Math.abs(parseInt(d));
+	if (isNaN(x)) return NaN;
+	if (isNaN(d)) return x;
+	var factor = this.pow(10,d);
+	return this.round(x*factor)/factor;
+}
+
 // ======================= NEW METHODS FOR THE FILE() CONSTRUCTOR ==================
 
-// fn: filepath, fixSlash: changes backslashes to forward slashes (useful for VWorks 14.x).
+// fn: filepath, forwardSlashes: changes backslashes to forward slashes (useful for VWorks 14.x).
 // The filename is set in the "filename" property.
-File.prototype.setFilename = function (fn, fixSlash) {
+File.prototype.setFilename = function (fn, forwardSlashes) {
 	if (!fn) {print("setFilename: no filename provided."); return false};
-	this.filename = fixSlash ?  fn.replace(/\\/g,"/") : fn;
+	this.filename = forwardSlashes ?  fn.toForwardSlashes() : fn;
 }
+
+// ------------------------------------------------------------------------------
 
 // This method reads the content of the file and stores it in the "content" property
 File.prototype.readFile = function () {
 	if (!this.filename) {print("readFileContent: set the filename property first."); return false};
-	if (!this.Exists(this.filename)) {print("readFileContent: file not found."); return false};
+	if (!this.Exists(this.filename)) {alert(); print("readFileContent: file not found."); return false};
 	this.Open(this.filename);
 	this.content = this.Read();
 	this.Close();
+	return this.content;
 }
 
-// This method saves "content" in this.filename
-// If content is an array then the separator "sep" is used to separate the elements of the array.
+// ------------------------------------------------------------------------------
+
+// This method saves "content" to this.filename (overwriting the file!).
+// If content is an array then the separator "sep" is used to separate the elements of the array
+// and "\n" is added at the end.
 // "suppressCRLF" is passed to Open() as third argument. 
 File.prototype.writeFile = function (content, sep, suppressCRLF) {
-	if (!this.filename) {print("writeToFile: set the filename first."); return false}; 
-	var txt = isArray(content) ? content.join(sep) : content;
+	if (!this.filename) {alert(); print("writeToFile: set the filename first."); return false}; 
+	var txt = isArray(content) ? content.join(sep) + "\n" : content;
 	this.Open(this.filename, true, suppressCRLF);
 	this.Write(txt);
 	this.Close();
+	this.readFile();
+	return true;
 }
+
+// ------------------------------------------------------------------------------
 
 // This method appends "content" to this.filename.
 // See "writeFile" for the meaning of the parameters.
 File.prototype.appendFile = function (content, sep, suppressCRLF) {
-	if (!this.filename) {print("writeToFile: set the filename first."); return false}; 
-	var txt = (isArray(content) ? content.join(sep) : content) + "\n";
+	if (!this.filename) {alert(); print("writeToFile: set the filename first."); return false}; 
+	var txt = isArray(content) ? content.join(sep) + "\n" : content;
 	this.Open(this.filename, false, suppressCRLF);
 	this.Write(txt);
 	this.Close();
+	this.readFile();
+	return true;
 }
+
+// ------------------------------------------------------------------------------
 
 // This method first reads the content of this.filename and then stores it in the 
 // filepath "fn2". If fn2 exists and overwrite is false, no copy will happen. 
 File.prototype.copyFile = function (fn2, overwrite) {
-	if (!this.filename) {print("copyFile: set the filename first."); return false};
-	if (!overwrite && this.Exists(fn2)) {print("copyFile: file exists. Can't copy."); return false};
-	this.readFile();
-	var fn = this.filename;
-	this.setFilename(fn2,true)
-	this.writeFile(this.content);
-	this.filename = fn;
+	if (!this.filename) {alert(); print("copyFile: set the filename first."); return false};
+	if (!overwrite && this.Exists(fn2)) {alert(); print("copyFile: target file exists. Can't copy."); return false};
+	var cmd = "cmd /c copy /Y \"" + this.filename.toBackSlashes() + "\" \"" + fn2.toBackSlashes() + "\"";
+	run(cmd, true)
+	return true;
 }
 
-// This method deletes the file in this.filename, unless it is open. 
-File.prototype.deleteFile = function () {
-	if (!this.filename) {print("deleteFile: set the filename first."); return false};
-	if (this.IsOpen()) {print("deleteFile: file is open. Can't delete."); return false};
-	this.Delete(this.filename);
+// ------------------------------------------------------------------------------
+
+// Delete file (added for naming consistency) 
+File.prototype.deleteFile = function (fn) {
+	if (!this.Exists(fn)) {alert(); print("deleteFile: file not found."); return false};
+	this.Delete(fn);
+	return true;
 };
 
+// ------------------------------------------------------------------------------
+
+// This method lists the files in a folder using:
+// "cd <folder> & dir /b <folder> <pattern> > <outFile>"
+// folder: the required folder 
+// patter: like "*.*" or "*.txt"
+// outFile: (generally not required) a temporary file in <folder>
+File.prototype.readFolder = function (folder, pattern, outFile)  {
+	if (!folder) {alert(); print("readFolder: no folder provided."); return false};
+	var pattern = pattern || "*.*";
+	var outFile = outFile || "__readFolder";
+	var dosFolder = folder.toBackSlashes()//replace(/\//g, "\\").replace(/[\/\\]$/,"");
+	if (!this.Exists(dosFolder)) {alert(); print("readFolder: folder not found."); return false};
+	var command = "cd " + dosFolder + " & dir /b " + pattern + " > " + outFile;   
+	run("cmd /c " + command, true);
+	this.Open(folder + outFile);
+	var folderContent = (this.Read()).stripEmptyLines();
+	this.Close();
+	this.Delete(folder + outFile);
+	return folderContent.split("\n").filter(function (el) {return !!el});
+}
 
 // ======================= BASE64 ENCODING/DECODING FUNCTIONS ==================
-// see https://base64.guru/learn/base64-algorithm/encode and wikipedia
 
+// see https://base64.guru/learn/base64-algorithm/encode and wikipedia
 function btoa (inStr) {
 	var inStr = String(inStr)
     var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
@@ -563,9 +740,9 @@ function getWellselection (well,plateType) {
 					384: /^[A-P](0?[1-9]|1[0-9]|2[0-4])$/,
 					1536: /^([A-Z]|A[A-F]|([A-F])\2)(0?[1-9]|[123][0-9]|4[0-8])$/};
 	if (plateType === undefined) {print("getWellselection: no plate type provided - defaulting to 96 well-format"); var plateType = 96};
-	var plateType = plateType.toString().replace(filterSpaces,'');
+	var plateType = plateType.toString().replace(filterSpaces,"");
 	if (!filterType.test(plateType)) {print("getWellselection: bad plate type \"" + plateType +"\""); return false};
-	var well = well.toString().toUpperCase().replace(filterSpaces,'');
+	var well = well.toString().toUpperCase().replace(filterSpaces,"");
 	if(!checkWell[plateType].test(well)) {print("getWellselection: bad well address \"" + well + "\" for selected plate type \"" + plateType +"\""); return false};
 	var row = filter2Letters.test(well) ? 26 + well.charCodeAt(1) - 64 : well.charCodeAt(0) - 64;
 	var col = filter12Numbers.exec(well)[0];
@@ -676,6 +853,29 @@ function getTimeStamp () {
 
 // ------------------------------------------------------------------------------
 
+// This constructor simulates WaitFor/Signal pairs.
+// It is useful when preventing a subprocess from starting while waiting 
+// from "something" to happen. 
+// dontReset: generally not provided. If provided, the WaitFor will not block  
+// after the first signal is received. 
+function Signal (dontReset) {
+   if (!(task && task.getProtocolName())) {
+      print("Warning: Signal() must only be instantiated in a protocol.");
+      return false;
+   }
+   var signaled = false;
+   this.waitForSignal =function (delay, message) {
+      signaled ? (signaled=!!dontReset, task.skip()) : task.repeatDelay(delay);
+      message && print(message);
+   }
+   this.sendSignal = function (message) {
+      signaled = true;
+      message && print(message);
+   }
+}
+
+// ------------------------------------------------------------------------------
+
 // This is a contructor that returns an object with a method "log" 
 // that adds a line to a custom log file, creating the path if not existent. 
 // If fileOrTask is the "task" object then the output file is automatically set to
@@ -710,39 +910,88 @@ function getTimeStamp () {
 
 // ------------------------------------------------------------------------------
 
-// This constructor is useful when one needs to extract variables  
-// from a form having a certain prefix and store them in a JSON file. 
+// This constructor is useful to extract variables 
+// having a certain prefix from a form and store them in a JSON file. 
+// It is also possible to extract variables whose names are contained 
+// in an external file (one per line). 
+// External file will take precedence over prefix. 
 // The form variables are supposed to be in the global context and will be stored 
 // in the global context when read from the JSON file. 
-function FormManager (prefix,fileName) {
+
+function MethodManager (path, prefix, fileExt, varFile) {
 	if (typeof JSON.stringify !== "function" || typeof JSON.parse !== "function") {
-		print("No JSON object found: aborting...")
+		alert();
+		print("No JSON object available: aborting.")
 		return false
-	}
-	var gObj = GetGlobalObject();
-	this.save = function () { 
-		var jObj = {};  
-		for (var p in gObj) if (gObj.hasOwnProperty(p) && p.indexOf(prefix)===0) jObj[p] = gObj[p];
-		var jsonString = JSON.stringify(jObj);
-		print("Saving the following JSON string: " + jsonString); 
-		var f = new File();
-		f.Open(fileName,true);
-		f.Write(jsonString);
-		f.Close();
 	};
-	this.load = function () {
+	if (varFile) {
 		var f = new File();
-		if (f.Exists(fileName)) {
-			f.Open(fileName);
-			var jsonString = f.Read();
-			f.Close();
-			print("Loading the following JSON string: " + jsonString);
-			var jObj = JSON.parse(jsonString);
-			for (var p in jObj) if (jObj.hasOwnProperty(p) && p.indexOf(prefix)===0) gObj[p] = jObj[p];
+		if (!f.Exists(varFile)) {alert(); print(varFile + " not found: aborting."); return false}
+		var varFile = varFile.toForwardSlashes();
+		f.Open(varFile);
+		var variableList =  f.Read().stripEmptyLines().split("\n");
+		f.Close();
+	}
+	if (!path) {alert(); print("Missing path."); return false;} 
+	var variableList = variableList || undefined;
+	var path = path.toForwardSlashes();
+	var fileExt = fileExt || "json";
+	var fileExt = "." + fileExt.replace(/^\.+/,""); 
+	var prefix = prefix || ""; 
+	var pattern = "*" + fileExt;
+	var gObj = GetGlobalObject();
+	var sanitize = function (fn) {
+		var fn = String(fn);
+		fn = path + fn.basename(); 
+		var regEx = new RegExp("("+fileExt+")+");
+		return fn.replace(regEx,"")+fileExt;
+	}
+	this.saveMethod = function (fileName, overwrite) {
+		if (!fileName) {alert(); print("No filename provided."); return false;} 
+		var fileName = sanitize(fileName);
+		var f = new File();
+		if (!overwrite && f.Exists(fileName)) {alert(); print("File exists."); return false;} 
+		var jObj = {};  
+		if (variableList){
+			for (var i = 0; i < variableList.length; i++) jObj[variableList[i]] = gObj[variableList[i]];
 		}
 		else {
-			print("File " + fileName + " does not exist!")
-		}
+			for (var p in gObj) if (gObj.hasOwnProperty(p) && p.indexOf(prefix)===0) jObj[p] = gObj[p];
+		};
+		var jsonString = JSON.stringify(jObj, false, 1);
+		print("Saving the following JSON string: " + jsonString); 
+		f.Open(fileName, overwrite);
+		f.Write(jsonString);
+		f.Close();
+		return true;
+	};
+	this.loadMethod = function (fileName) {
+		if (!fileName) {alert(); print("No filename provided."); return false;} 
+		var fileName = sanitize(fileName);
+		var f = new File();
+		if (!f.Exists(fileName)) {alert(); print("Can't find " + fileName +"."); return false;} 
+		f.Open(fileName);
+		var jsonString = f.Read();
+		f.Close();
+		print("Loading the following JSON string: " + jsonString);
+		var jObj = JSON.parse(jsonString);
+		for (var p in jObj) if (jObj.hasOwnProperty(p)) gObj[p] = jObj[p];
+		return true;
+	}
+	this.deleteMethod = function (fileName, enable) {
+		if (!fileName) {alert(); print("No filename provided."); return false;} 
+		var fileName = sanitize(fileName);
+		var f = new File();
+		if (!f.Exists(fileName)) {alert(); print("Can't find " + fileName +"."); return false;} 
+		if (!enable && f.Exists(fileName)) {alert(); print("Delete disabled: can't proceed."); return false;} 
+		f.Delete(fileName);
+		sleep(1); 
+		return true;
+	}
+	this.listMethods = function () {
+		var f = new File();
+		var list = f.readFolder(path, pattern); 
+		return list.length ? list : ["No matching files"];
 	}
 };
 
@@ -780,32 +1029,15 @@ function formatToDimensions(format) {
 // format: number of wells in the plate (see getWellselection())  
 function wellToIndex(well,mode,format) {
 	var mode = mode.replace(/\ /,"").toLowerCase();
-	if (!well) {
-		print("wellToIndex: no well address provided");
-		return false;
-	}
-	if (mode !== "bycol" && mode !== "byrow" ) {
-		print("wellToIndex: wrong mode");
-		return false;
-	}
+	if (!well) {print("wellToIndex: no well address provided");return false};
+	if (mode !== "bycol" && mode !== "byrow" ) {print("wellToIndex: wrong mode");return false};
 	var dims = formatToDimensions(format);
-	if (!dims) {
-		print("wellToIndex: wrong format");
-		return false;
-	}
+	if (!dims) {print("wellToIndex: wrong format");return false};
 	var wellsel = getWellselection(well,format);
-	if (!wellsel) {
-		print("wellToIndex: wrong well for given format");
-		return false;
-	}
+	if (!wellsel) {print("wellToIndex: wrong well for given format");return false};
 	var row = wellsel[0];
 	var col = wellsel[1];
-	if (mode === "byrow") {
-		return (row-1)*dims.nCols + col - 1;
-	}
-	else if (mode === "bycol") {
-		return (col-1)*dims.nRows + row - 1;
-	} 
+	return mode === "byrow" ? (row-1)*dims.nCols + col - 1 : (col-1)*dims.nRows + row - 1;
 }
 
 // ------------------------------------------------------------------------------
@@ -815,10 +1047,7 @@ function wellToIndex(well,mode,format) {
 function indexToWellselection (index,mode,format) {
 	var mode = mode.replace(/\ /,"").toLowerCase();
 	var row, col;
-	if (!index) {
-		print("indexToWellselection: no index provided");
-		return false;
-	}
+	if (!index) {print("indexToWellselection: no index provided");return false};
 	if (mode !== "bycol" && mode !== "byrow" ) {
 		print("indexToWellselection: wrong mode");
 		return false;
@@ -844,15 +1073,11 @@ function indexToWellselection (index,mode,format) {
 // This function transform a wellselection ARRAY (not array of arrays) 
 // into a well address
 function wellselectionToWell (ws,pad) {
-	if (!ws) {
-		print("wellselectioToWell: no wellselection provided");
-		return false;
-	}
+	if (!ws) {print("wellselectioToWell: no wellselection provided");return false};
 	var row = ws[0];
 	var col = ws[1];
 	var string = String.fromCharCode(65+(row-1)%26);
 	if (Math.floor((row-1)/26) > 0) string += string;
-	//return string+ ( "0000" + col).slice(-(pad ? pad : string.length));
 	return string+col.zeropad(pad);
 }
 
@@ -862,8 +1087,8 @@ print("*** VWorksExtLib.js successfully loaded ***")
 
 // finally load public domain JSON library (VWorks version)
 // Thanks to Douglas Crockford: https://github.com/douglascrockford/JSON-js
-if ((new File).Exists("C:/VWorks Workspace/VWorksExtLib/json2.js")) {
-	open("C:/VWorks Workspace/VWorksExtLib/json2.js");
+if ((new File).Exists(getVWorksExtLibRoot() + "json2.js")) {
+	open(getVWorksExtLibRoot() + "json2.js");
 	print("*** Public domain json2.js successfully loaded ***");
 };
 
