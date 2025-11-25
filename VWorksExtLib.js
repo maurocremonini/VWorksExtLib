@@ -6,8 +6,8 @@
 // It is not affiliated with, endorsed by, or representative of my employer,  //
 // Agilent Technologies. All code, opinions, and documentation are my own and //
 // my employer bears no responsibility for any aspect of this work.           //
+// Use the code at your own risk. Credits where credit is due.                //
 // ***************************************************************************//
-// Use the code at your own risk. Credits where credit is due.
 //
 // ======================== GENERAL PURPOSE FUNCTIONS ===============================
 
@@ -125,20 +125,21 @@ function alert() {
 
 function msgBox (msg, title, buttons, type) {
 	// see https://ss64.com/ps/messagebox.html
-	// Image		Value	ButtonType	Value
-	// None			0	 	OK			0
-	// Error		16	 	OKCancel	1
-	// Question		32	 	YesNoCancel	3
-	// Warning		48	 	YesNo	4
-	// Information	64	 	 	 
+	// ButtonType	Value	Image		Value
+	// OK			0		None		0	 	
+	// OKCancel		1		Error		16	 	
+	// YesNoCancel	3 		Question	32	 	
+	// YesNo		4		Warning		48	 	
+	// 						Information	64	 	 
 	var msgBoxFile = (getVWorksExtLibRoot() + "MsgBox/response.txt").toBackSlashes();
 	ensureFolderExists(msgBoxFile.dirname());
-    var quote = function (s) {return "'" + s + "'"};
+    var sQuote = function (s) {return "'" + s + "'"};
+	var escDQuote = function (s) {return "\\\"" + s + "\\\""};
     var pre = "cmd /c powershell \"Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show(";
-    var mb = [pre + quote(msg)];
-    mb.push(quote(title || ""));
-    mb.push(quote(buttons || "OK"));
-    mb.push(quote(type || "Information")+")");
+    var mb = [pre + escDQuote(msg)];
+    mb.push(sQuote(title || ""));
+    mb.push(sQuote(buttons || "OK"));	
+    mb.push(sQuote(type || "None")+")");
 	var cmd = mb.join(",") + " | Out-File -Filepath '" + msgBoxFile + "' -Encoding ascii \"";
     run(cmd, true);
 	var f = new File();
@@ -959,7 +960,7 @@ function MethodManager (path, prefix, fileExt, varFile) {
 			for (var p in gObj) if (gObj.hasOwnProperty(p) && p.indexOf(prefix)===0) jObj[p] = gObj[p];
 		};
 		var jsonString = JSON.stringify(jObj, false, 1);
-		print("Saving the following JSON string: " + jsonString); 
+		//print("Saving the following JSON string: " + jsonString); 
 		f.Open(fileName, overwrite);
 		f.Write(jsonString);
 		f.Close();
@@ -973,7 +974,7 @@ function MethodManager (path, prefix, fileExt, varFile) {
 		f.Open(fileName);
 		var jsonString = f.Read();
 		f.Close();
-		print("Loading the following JSON string: " + jsonString);
+		//print("Loading the following JSON string: " + jsonString);
 		var jObj = JSON.parse(jsonString);
 		for (var p in jObj) if (jObj.hasOwnProperty(p)) gObj[p] = jObj[p];
 		return true;
