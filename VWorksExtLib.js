@@ -11,10 +11,15 @@
 //
 // ======================== GENERAL PURPOSE FUNCTIONS ===============================
 
-// This function returns the root folder for VWorksExtLib
-function getVWorksExtLibRoot() {
-	return "C:/VWorks Workspace/VWorksExtLib/"
-}
+// This function returns the root folder for VWorksExtLib.
+// If getVWorksExtLibRoot() is defined in the relevant context before open()ing 
+// VWorksExtLib.js, no redefinition will take plate. 
+// Note that if getVWorksExtLibRoot exists it must return "something" 
+// starting with "C:/VWorks Workspace/" (any casing). 
+var getVWorksExtLibRoot  = (typeof getVWorksExtLibRoot === "function" &&  
+							getVWorksExtLibRoot().toLowerCase().replace(/\\/g,"/").indexOf("c:/vworks workspace/")===0 && 
+							getVWorksExtLibRoot) || 
+	function () {return "C:/VWorks Workspace/VWorksExtLib/"}
 
 // ------------------------------------------------------------------------------
 
@@ -1085,11 +1090,15 @@ function wellselectionToWell (ws,pad) {
 // ------------------------------------------------------------------------------
 // end of VWorksExtLib.js
 print("*** VWorksExtLib.js successfully loaded ***")
+print("VWEL root path is " + getVWorksExtLibRoot());
 
 // finally load public domain JSON library (VWorks version)
 // Thanks to Douglas Crockford: https://github.com/douglascrockford/JSON-js
 if ((new File).Exists(getVWorksExtLibRoot() + "json2.js")) {
 	open(getVWorksExtLibRoot() + "json2.js");
 	print("*** Public domain json2.js successfully loaded ***");
+}
+else {
+	print("Warning: could not find json2.js in " + getVWorksExtLibRoot());
 };
 
