@@ -1053,7 +1053,7 @@ function wellToIndex(well,mode,format) {
 function indexToWellselection (index,mode,format) {
 	var mode = mode.replace(/\ /,"").toLowerCase();
 	var row, col;
-	if (!index) {print("indexToWellselection: no index provided");return false};
+	if (index===undefined) {print("indexToWellselection: no index provided");return false};
 	if (mode !== "bycol" && mode !== "byrow" ) {
 		print("indexToWellselection: wrong mode");
 		return false;
