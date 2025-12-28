@@ -1107,7 +1107,6 @@ function wellselectionToWell (ws,pad) {
 // ------------------------------------------------------------------------------
 // end of VWorksExtLib.js
 print("*** VWorksExtLib.js successfully loaded ***")
-print("VWEL root path is " + getVWorksExtLibRoot());
 
 // ------------------------------------------------------------------------------
 
@@ -1645,5 +1644,6 @@ if (typeof JSON !== "object") {
     }
 }());
 
-print("*** Public domain json2.js successfully loaded ***")
+print("*** Public domain json2.js successfully loaded ***");
+print("VWEL root path is " + getVWorksExtLibRoot());
 print("VWEL version is " + getVWorksExtLibVersion());
