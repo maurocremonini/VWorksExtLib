@@ -1646,3 +1646,4 @@ if (typeof JSON !== "object") {
 }());
 
 print("*** Public domain json2.js successfully loaded ***")
+print("VWEL version is " + getVWorksExtLibVersion());
