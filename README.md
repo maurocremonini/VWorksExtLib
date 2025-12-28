@@ -2,7 +2,7 @@
 
 Hello VWorkers.
 
-welcome to VWorks Extension Library, or VWorksExtLib in short!
+welcome to VWEL, the VWorks Extension Library!
 
 The Agilent VWorks Automation Control software includes a very old JavaScript implementation of the Nescape Portable Runtime libraries that dates back to the late 1990's / early 2000's.
 
