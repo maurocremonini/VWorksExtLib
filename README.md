@@ -1,8 +1,8 @@
-# VWorksExtLib 
+![VWEL logo](Images/VWEL_logo.png)
 
 Hello VWorkers.
 
-welcome to Mauro's VWorks Extension Library!
+welcome to VWorks Extension Library, or VWorksExtLib in short!
 
 The Agilent VWorks Automation Control software includes a very old JavaScript implementation of the Nescape Portable Runtime libraries that dates back to the late 1990's / early 2000's.
 

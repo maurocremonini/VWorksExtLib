@@ -10,7 +10,7 @@ function VWorksExtLib() {
     print("VWorks Extension Library Loaded (JS Wrapper version)");
 }
 
-function getVWorkExtLibVersion() {
+function getVWorksExtLibVersion() {
 	// Update this when releasing new versions!
 	return "1.0.0";
 }
