@@ -1,13 +1,18 @@
 ///<?xml version='1.0' encoding='ASCII' ?>
-///<Velocity11 file='MetaData' md5sum='30e0aedc9f717663755171f8f9456527' version='1.0' >
-///	<Command Compiler='1' Description='VWorks Extension Library' Editor='-1' Name='VWorksExtLib'>
-///	  <Parameters >
-///	  </Parameters>
-///	</Command>
+///<Velocity11 file='MetaData' md5sum='00000000000000000000000000000000' version='1.0'>
+///<Command Compiler='1' Description='VWorks Extension Library' Editor='-1' Name='VWorksExtLib'>
+///	<Parameters>
+///	</Parameters>
+///</Command>
 ///</Velocity11>
 
 function VWorksExtLib() {
     print("VWorks Extension Library Loaded (JS Wrapper version)");
+}
+
+function getVWorkExtLibVersion() {
+	// Update this when releasing new versions!
+	return "1.0.0";
 }
 
 // VWorksExtLib  - VWorks Extension Library
