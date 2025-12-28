@@ -1646,4 +1646,4 @@ if (typeof JSON !== "object") {
 
 print("*** Public domain json2.js successfully loaded ***");
 print("VWEL root path is " + getVWorksExtLibRoot());
-print("VWEL version is " + getVWorksExtLibVersion());
+print("VWEL JSWrapper version is " + getVWorksExtLibVersion());
