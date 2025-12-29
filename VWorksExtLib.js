@@ -1023,7 +1023,7 @@ function MethodManager (path, prefix, fileExt, varFile) {
 // This function returns an object whose nRows and nCols properties
 // contain the number of rows and cols for the given format.
 // e.g. if format is 96 => nRows and nCols will be 8 and 12 
-function formatToDimensions(format) {
+function getDimensionsFromFormat(format) {
 	var formatConv = {
 		6: {nRows: 2, nCols: 3},
 		12: {nRows: 3, nCols: 4},
@@ -1034,12 +1034,11 @@ function formatToDimensions(format) {
 		384:  {nRows: 16, nCols: 24},
 		1536:  {nRows: 32, nCols: 48}
 	};
-	if (!formatConv.hasOwnProperty(format)) {
-		print("formatToDimensions: wrong format")
-		return false
-	};
+	if (!formatConv.hasOwnProperty(format)) {print("getDimensionsFromFormat: wrong format");return false};
 	return formatConv[format];
 }
+// setting an alias in case the older name is used in existing protocols
+var formatToDimensions = getDimensionsFromFormat;
 
 // ------------------------------------------------------------------------------
 
@@ -1050,34 +1049,36 @@ function formatToDimensions(format) {
 // well: any string containing a well address
 // mode: "byrow" or "bycol" (case insensitive)
 // format: number of wells in the plate (see getWellselection())  
-function wellToIndex(well,mode,format) {
+function getIndexFromWell(well,mode,format) {
 	var mode = mode.replace(/\ /,"").toLowerCase();
-	if (!well) {print("wellToIndex: no well address provided");return false};
-	if (mode !== "bycol" && mode !== "byrow" ) {print("wellToIndex: wrong mode");return false};
-	var dims = formatToDimensions(format);
-	if (!dims) {print("wellToIndex: wrong format");return false};
+	if (!well) {print("getIndexFromWell: no well address provided");return false};
+	if (mode !== "bycol" && mode !== "byrow" ) {print("getIndexFromWell: wrong mode");return false};
+	var dims = getDimensionsFromFormat(format);
+	if (!dims) {print("getIndexFromWell: wrong format");return false};
 	var wellsel = getWellselection(well,format);
-	if (!wellsel) {print("wellToIndex: wrong well for given format");return false};
+	if (!wellsel) {print("getIndexFromWell: wrong well for given format");return false};
 	var row = wellsel[0];
 	var col = wellsel[1];
 	return mode === "byrow" ? (row-1)*dims.nCols + col - 1 : (col-1)*dims.nRows + row - 1;
 }
+// setting an alias in case the older name is used in existing protocols
+var wellToIndex = getIndexFromWell;
 
 // ------------------------------------------------------------------------------
 
-// This function uses an index as described in wellToIndex() to generate
+// This function uses an index as described in getIndexFromWell() to generate
 // corresponding wellselection (as array, not array of arrays)
-function indexToWellselection (index,mode,format) {
+function getWellselectionFromIndex (index,mode,format) {
 	var mode = mode.replace(/\ /,"").toLowerCase();
 	var row, col;
-	if (index===undefined) {print("indexToWellselection: no index provided");return false};
+	if (index===undefined) {print("getWellselectionFromIndex: no index provided");return false};
 	if (mode !== "bycol" && mode !== "byrow" ) {
-		print("indexToWellselection: wrong mode");
+		print("getWellselectionFromIndex: wrong mode");
 		return false;
 	}
-	var dims = formatToDimensions(format);
+	var dims = getDimensionsFromFormat(format);
 	if (!dims) {
-		print("indexToWellselection: wrong format");
+		print("getWellselectionFromIndex: wrong format");
 		return false;
 	}
 	if (mode === "byrow") {
@@ -1090,19 +1091,23 @@ function indexToWellselection (index,mode,format) {
 	}
 	return [row,col];
 }
+// setting an alias in case the older name is used in existing protocols
+var indexToWellselection = getWellselectionFromIndex;
 
 // ------------------------------------------------------------------------------
 	
 // This function transform a wellselection ARRAY (not array of arrays) 
 // into a well address
-function wellselectionToWell (ws,pad) {
-	if (!ws) {print("wellselectioToWell: no wellselection provided");return false};
-	var row = ws[0];
-	var col = ws[1];
-	var string = String.fromCharCode(65+(row-1)%26);
-	if (Math.floor((row-1)/26) > 0) string += string;
-	return string+col.zeropad(pad);
+function getWellFromWellselection (ws,pad) {
+	if (!ws) {print("getWellFromWellselection: no wellselection provided"); return false};
+	var row = parseInt(ws[0]);
+	var col = parseInt(ws[1]);
+	var str = String.fromCharCode(65+(row-1)%26);
+	if (Math.floor((row-1)/26) > 0) str = "A" + str;
+	return str+col.toString().zeropad(pad);
 }
+// setting an alias in case the older name is used in existing protocols
+var wellselectionToWell = getWellFromWellselection;
 
 // ------------------------------------------------------------------------------
 // end of VWorksExtLib.js
@@ -1646,4 +1651,5 @@ if (typeof JSON !== "object") {
 
 print("*** Public domain json2.js successfully loaded ***");
 print("VWEL root path is " + getVWorksExtLibRoot());
+ensureFolderExists(getVWorksExtLibRoot());
 print("VWEL JSWrapper version is " + getVWorksExtLibVersion());
