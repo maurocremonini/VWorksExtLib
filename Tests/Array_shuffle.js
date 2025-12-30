@@ -12,6 +12,9 @@ for (i=0; i< nPerms; i++) {
     track[currPerm] ? track[currPerm]++ : track[currPerm] = 1; 
 };
 $print();
-$print("Expected probability: 16.7%");
+$print("Expected probability: 16.67%");
 $print("Results:")
-for (p in track) $print(p + " --> " + Math.round(1000*track[p]/nPerms)/10 + "%");
+
+Object.keys(track).sort().forEach(function (key) {
+    $print("Key: " + key + " occurred " + track[key] + " times (" + Math.roundTo(100*track[key]/nPerms,2) + "%)");
+})
