@@ -419,8 +419,8 @@ Array.prototype.unique = function (callback) {
 // ------------------------------------------------------------------------------
 
 // This Array methods scrambles the elements of an array using the Fisher-Yates Shuffle Algorithm.
-// OLD VERSION
-Array.prototype.shuffleOLD = function () {
+// Vanilla version (kept for reference).
+Array.prototype.shuffleVanilla = function () {
     var arr = this.slice(); //shallow copy
     var len = arr.length;
     var i, r, tmp;
@@ -439,14 +439,11 @@ Array.prototype.shuffleOLD = function () {
 Array.prototype.shuffle = function () {
 	var arrCpy = this.slice();
     var cbk = function (el, ind, arr) {
-		if (ind === arr.length-1) return arr[ind];
-		var tmp, range = arr.length - ind;
-		var rnd = Math.floor(ind + range * Math.random());
-		if (rnd === ind) return arr[ind];
-		tmp = arr[ind]; 
+		if (ind === arr.length-1) return;
+		var rnd = ind + Math.floor((arr.length - ind) * Math.random());
+		if (rnd === ind) return;
 		arr[ind] = arr[rnd];
-		arr[rnd] = tmp;
-		return arr[ind]
+		arr[rnd] = el;
 	}
 	arrCpy.forEach(cbk);
 	return arrCpy; 
