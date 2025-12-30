@@ -169,6 +169,53 @@ function msgBox (msg, title, buttons, type) {
 	return f.readFile().stripEmptyLines().trim();
 }
 
+// ------------------------------------------------------------------------------
+
+// This function returns a time stamp in the default format "YYYY-MM-DD_hh-mm-ss".
+// If a different form is needed, provide a new format using the following tokens:
+// YYYY: full year
+// YY: last two digits of year
+// MM: month (01-12)
+// DD: day (01-31)
+// HH: hours (00-23)
+// hh: hours (00-12)
+// a: am/pm
+// A: AM/PM
+// mm: minutes (00-59)
+// ss: seconds (00-59)
+// If dateObj is provided, it is used instead of the current date/time.
+// Examples: 
+// getTimeStamp("DD/MM/YYYY-HH_mm_ss") --> "13/03/1970-13_23_00"
+// getTimeStamp("YYYY-MM-DD hh:mm:ss A", new Date(1965,0,4,13,30,45)) --> "1965-01-04 01:30:45 PM"
+// Note: non-token characters are preserved as-is. If multiple tokens are used, they are all replaced.
+function getTimeStamp (format, dateObj) {
+	if (!format) format = "YYYY-MM-DD_HH-mm-ss";
+	var format = String(format);
+	var myDate = (dateObj && dateObj.constructor.name === "Date") ? dateObj : (new Date());
+	var YYYY = String(myDate.getFullYear());
+	var YY = YYYY.slice(-2);
+	var MM = String(myDate.getMonth() + 1).zeropad(2);
+	var DD = String(myDate.getDate()).zeropad(2);
+	var HH = String(myDate.getHours()).zeropad(2);
+	var hh = String((myDate.getHours()%12) || 12).zeropad(2);
+	var mm = String(myDate.getMinutes()).zeropad(2);
+	var ss = String(myDate.getSeconds()).zeropad(2);
+	var a = (myDate.getHours() < 12) ? "am" : "pm";
+	var A = a.toUpperCase();
+	format = format
+		.replace(/YYYY/g,YYYY)
+		.replace(/YY/g,YY)
+		.replace(/MM/g,MM)
+		.replace(/DD/g,DD)
+		.replace(/HH/g,HH)
+		.replace(/hh/g,hh)
+		.replace(/mm/g,mm)
+		.replace(/ss/g,ss)
+		.replace(/a/g,a)
+		.replace(/A/g,A);
+	return format;
+}
+
 // ======================== POLYFILLS FOR OBJECTS ===============================
 
 // Polyfil for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
@@ -855,21 +902,6 @@ function plateInfo (plateName) {
 	if (resObj.labwareType !== "Tip box") resObj.tipCapacity = "NA";
 	return resObj;
 }
-
-// ------------------------------------------------------------------------------
-
-// This function returns a time stamp in the format "YYYY-MM-DD_hh-mm-ss".
-function getTimeStamp () {
-	//creating timestamp
-	var myDate = new Date();
-	var YYYY = myDate.getFullYear();
-	var MM = String(myDate.getMonth() + 1).zeropad(2);
-	var DD = String(myDate.getDate()).zeropad(2);
-	var hh = String(myDate.getHours()).zeropad(2);
-	var mm = String(myDate.getMinutes()).zeropad(2);
-	var ss = String(myDate.getSeconds()).zeropad(2);
-	return  [[YYYY,MM,DD].join("-"),[hh,mm,ss].join("-")].join("_");
- }
 
 // ------------------------------------------------------------------------------
 
