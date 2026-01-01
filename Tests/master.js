@@ -15,8 +15,9 @@ else {
 if (f.Exists(VWELToUse)) {
     open(VWELToUse);
     $print("*** Using VWorksExtLib.js at:\n" + VWELToUse);
+    $print("VWEL Version: " + getVWorksExtLibVersion());
     rootPath = getVWorksExtLibRoot() + "Tests/";
-    codelist = f.readFolder(rootPath,"*.js").filter(function (fn){return fn!=="master.js"}).join(";");
+    codelist = f.readFolder(rootPath,"*.js").filter(function (fn){return fn!=="Master.js"}).join(";");
 }
 else {
     codelist = "*** VWorksExtLib.js not found!";
@@ -36,13 +37,17 @@ function installVWELWrapper() {
     var libFile = new File();
     libFile.filename = nonWrapperVersionPath;
     var iconFile = new File();
-    iconFile.filename = nonWrapperVersionPath.dirname() + "VWorksExtLib.bmp";
+    iconFile.filename = nonWrapperVersionPath.dirname() + "/VWorksExtLib.bmp";
     if (isVWorks14()) {
-        // TBD
+        UploadToStorage(libFile.filename, wrapperPath14,"VWEL Wrapper installed", true);
+        UploadToStorage(iconFile.filename, wrapperPath14.dirname().dirname()+"/Icons/VWorksExtLib.bmp","VWEL Wrapper installed", true);
+        $print("VWorksExtLib.js wrapper installed for VWorks 14.x.");
+        $print("\nPlease restart VWorks.");
     }
     else {
         libFile.copyFile(wrapperPath13, true);
-        iconFile.copyFile(wrapperPath13.dirname()+"Icons/"+iconFile.filename.basename(), true);
-        $print("VWorksExtLib.js wrapper installed for VWorks 13.x");
+        iconFile.copyFile(wrapperPath13.dirname()+"/Icons/"+iconFile.filename.basename(), true);
+        $print("VWorksExtLib.js wrapper installed for VWorks 13.x.");
+        $print("\nPlease restart VWorks.");
     }
 }

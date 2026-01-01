@@ -11,10 +11,10 @@
 // overwrite file
     myFile.writeFile("And now the file has been overwritten."); $print(myFile.content + "\n");
 // copy to another file in the same folder
-    myFile.copyFile(myFile.filename.dirname()+"testfile2.txt", true)
+    myFile.copyFile(myFile.filename.dirname()+"/testfile2.txt", true)
 // list files in the folder
     fileList = myFile.readFolder(myFile.filename.dirname(), "*.txt"); $print(fileList + "\n");
 // delete testfile2.txt
-    myFile.deleteFile(myFile.filename.dirname()+"testfile2.txt")
+    myFile.deleteFile(myFile.filename.dirname()+"/testfile2.txt")
 // list files in the folder again
     fileList = myFile.readFolder(myFile.filename.dirname(), "*.txt"); $print(fileList +"\n");

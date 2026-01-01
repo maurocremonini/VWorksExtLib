@@ -7,10 +7,11 @@ $print("filename.toBackSlashes() --> " + filename);
 filename = filename.toForwardSlashes();
 $print("filename.toForwardSlashes() --> " + filename);
 $print("basename --> " + filename.basename());
+$print("basename (w/o extension) --> " + filename.basename(".csv"));
 $print("extname --> " + filename.extname());
 $print("dirname --> " + filename.dirname());
 
-content = "\nThis is content with \n\nempty lines and \n\ntrailing line feeds\n\n"
+content = "\nThis is content with \n\nempty lines and \ntrailing line feeds\n\n"
 sep = "\n"+"=".repeat(15)+"\n";
 $print("\nOriginal content:" +sep + content + sep);
 content = content.stripEmptyLines();

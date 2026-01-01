@@ -554,23 +554,31 @@ String.prototype.getWellselection = function (plateType) {
 
 // ------------------------------------------------------------------------------
 
-// return filename without path
-String.prototype.basename = function () {
-	return (this.split(/[\/\\]/)).at(-1);
+// remove trailing slash or backslash
+String.prototype.stripTrailingSlash = function () {
+	return this.replace(/[\/\\]$/,"");
+} 
+
+// ------------------------------------------------------------------------------
+
+// return filename without path. If ext is provided and matches the file extension, it is removed as well.
+String.prototype.basename = function (ext) {
+	var ext = (ext && "." + ext.replace(/^\./,"")) || ""; // ensure ext starts with "." if provided
+	return (this.stripTrailingSlash().split(/[\/\\]/)).at(-1).replace(new RegExp(ext+"$"),"");
 }
 
 // ------------------------------------------------------------------------------
 
-// return folder name with final "/"
+// return folder name
 String.prototype.dirname = function () {
-	return (this.split(/[\/\\]/)).slice(0,-1).join("/")+"/";
+	return (this.stripTrailingSlash().split(/[\/\\]/)).slice(0,-1).join("/");
 }
 
 // ------------------------------------------------------------------------------
 
 // return file extension
 String.prototype.extname = function () {
-	return (this.split(".")).at(-1);
+	return (this.stripTrailingSlash().split(".")).at(-1);
 }
 
 // ------------------------------------------------------------------------------
@@ -689,14 +697,14 @@ File.prototype.readFolder = function (folder, pattern, outFile)  {
 	if (!folder) {alert(); print("readFolder: no folder provided."); return false};
 	var pattern = pattern || "*.*";
 	var outFile = outFile || "__readFolder";
-	var dosFolder = folder.toBackSlashes()//replace(/\//g, "\\").replace(/[\/\\]$/,"");
+	var dosFolder = folder.toBackSlashes();
 	if (!this.Exists(dosFolder)) {alert(); print("readFolder: folder not found."); return false};
 	var command = "cd " + dosFolder + " & dir /b " + pattern + " > " + outFile;   
 	run("cmd /c " + command, true);
-	this.Open(folder + outFile);
+	this.Open([folder,outFile].join("/"));
 	var folderContent = (this.Read()).stripEmptyLines();
 	this.Close();
-	this.Delete(folder + outFile);
+	this.Delete([folder,outFile].join("/"));
 	return folderContent.split("\n").filter(function (el) {return !!el});
 }
 
