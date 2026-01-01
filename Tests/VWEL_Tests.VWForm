@@ -5,6 +5,62 @@
   <Property name="ShowLogInFullScreen" value="1" />
   <Property name="FormBackgroundColor" value="-4144960" />
   <Object type="ToolboxLibrary.MainContainer, Toolbox, Version=13.1.12.1543, Culture=neutral, PublicKeyToken=null" name="mainContainer1" children="Controls">
+    <Object type="ToolboxLibrary.OperatorConsoleRadioButton, Toolbox, Version=13.1.12.1543, Culture=neutral, PublicKeyToken=null" name="operatorConsoleRadioButton2" children="Controls">
+      <Property name="DataBindings">
+        <Property name="DefaultDataSourceUpdateMode">OnValidation</Property>
+      </Property>
+      <Property name="Font">Tahoma, 10pt</Property>
+      <Property name="ForeColor">0, 0, 0</Property>
+      <Property name="Location">180, 121</Property>
+      <Property name="Name">operatorConsoleRadioButton2</Property>
+      <Property name="Size">139, 24</Property>
+      <Property name="TabIndex">8</Property>
+      <Parameter Name="Control name" Description="" Type="1" Value="operatorConsoleRadioButton2" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="JavaScript variable" Description="The variable whose value is displayed in this field" Type="1" Value="useWrapperVWEL" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Always use global context" Description="If checked, the variable above will always be retrieved from the Global context" Type="0" Value="1" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Read only" Description="If checked, the operator may never alter the value of this field" Type="0" Value="0" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Data entry" Description="If checked, anything the operator enters in this field may be saved" Type="0" Value="1" ValueToDisplay="" Hide_if="Variable(Read only) != Const(0)" />
+      <Parameter Name="Default value" Description="The contents of this field when the form is initially displayed" Type="8" Value="0" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Caption" Description="The string to display in the button" Type="1" Value="Use wrapper VWEL" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Group ID" Description="the Group ID that the radio button belongs to" Type="1" Value="whichVWEL" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Font size" Description="The point size of the font used to display text in this field" Type="8" Value="10" ValueToDisplay="" Hide_if="">
+        <Ranges>
+          <Range Value="1" />
+          <Range Value="72" />
+        </Ranges>
+      </Parameter>
+      <Parameter Name="Font color" Description="The color of the font used to display text in this field" Type="32" Value="0" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Enabled" Description="" Type="0" Value="1" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Value" Description="" Type="1" Value="" ValueToDisplay="" Hide_if="" />
+    </Object>
+    <Object type="ToolboxLibrary.OperatorConsoleRadioButton, Toolbox, Version=13.1.12.1543, Culture=neutral, PublicKeyToken=null" name="operatorConsoleRadioButton1" children="Controls">
+      <Property name="DataBindings">
+        <Property name="DefaultDataSourceUpdateMode">OnValidation</Property>
+      </Property>
+      <Property name="Font">Tahoma, 10pt</Property>
+      <Property name="ForeColor">0, 0, 0</Property>
+      <Property name="Location">180, 96</Property>
+      <Property name="Name">operatorConsoleRadioButton1</Property>
+      <Property name="Size">119, 24</Property>
+      <Property name="TabIndex">7</Property>
+      <Parameter Name="Control name" Description="" Type="1" Value="operatorConsoleRadioButton1" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="JavaScript variable" Description="The variable whose value is displayed in this field" Type="1" Value="useLocalVWEL" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Always use global context" Description="If checked, the variable above will always be retrieved from the Global context" Type="0" Value="1" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Read only" Description="If checked, the operator may never alter the value of this field" Type="0" Value="0" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Data entry" Description="If checked, anything the operator enters in this field may be saved" Type="0" Value="1" ValueToDisplay="" Hide_if="Variable(Read only) != Const(0)" />
+      <Parameter Name="Default value" Description="The contents of this field when the form is initially displayed" Type="8" Value="1" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Caption" Description="The string to display in the button" Type="1" Value="Use local VWEL" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Group ID" Description="the Group ID that the radio button belongs to" Type="1" Value="whichVWEL" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Font size" Description="The point size of the font used to display text in this field" Type="8" Value="10" ValueToDisplay="" Hide_if="">
+        <Ranges>
+          <Range Value="1" />
+          <Range Value="72" />
+        </Ranges>
+      </Parameter>
+      <Parameter Name="Font color" Description="The color of the font used to display text in this field" Type="32" Value="0" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Enabled" Description="" Type="0" Value="1" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Value" Description="" Type="1" Value="1" ValueToDisplay="" Hide_if="" />
+    </Object>
     <Object type="ToolboxLibrary.ToggleFullScreen, Toolbox, Version=13.1.12.1543, Culture=neutral, PublicKeyToken=null" name="toggleFullScreen1" children="Controls">
       <Property name="BackColor">104, 131, 139</Property>
       <Property name="Text">Full Screen ON/OFF</Property>
@@ -14,16 +70,16 @@
       <Property name="DataBindings">
         <Property name="DefaultDataSourceUpdateMode">OnValidation</Property>
       </Property>
-      <Property name="Font">Tahoma, 12pt</Property>
+      <Property name="Font">Tahoma, 11pt</Property>
       <Property name="ForeColor">255, 255, 255</Property>
-      <Property name="Location">331, 89</Property>
+      <Property name="Location">579, 89</Property>
       <Property name="Name">toggleFullScreen1</Property>
-      <Property name="Size">131, 56</Property>
+      <Property name="Size">121, 56</Property>
       <Property name="TabIndex">6</Property>
       <Parameter Name="Control name" Description="" Type="1" Value="toggleFullScreen1" ValueToDisplay="" Hide_if="" />
       <Parameter Name="Icon" Description="Choose icon for this button" Type="9" Value="" ValueToDisplay="Image Files(*.jpg;*.png;*.bmp;*.ico)|*.jpg;*.png;*.bmp;*.ico||" Hide_if="" />
       <Parameter Name="Caption" Description="The string to display in the button" Type="1" Value="Full Screen ON/OFF" ValueToDisplay="" Hide_if="" />
-      <Parameter Name="Font size" Description="The point size of the font used to display text in this field" Type="8" Value="12" ValueToDisplay="" Hide_if="">
+      <Parameter Name="Font size" Description="The point size of the font used to display text in this field" Type="8" Value="11" ValueToDisplay="" Hide_if="">
         <Ranges>
           <Range Value="1" />
           <Range Value="72" />
@@ -92,6 +148,38 @@
       <Parameter Name="Value" Description="" Type="1" Value="" ValueToDisplay="" Hide_if="" />
       <Parameter Name="Item selections variable" Description=" JavaScript variable that will hold the selections that appear in the droplist." Type="1" Value="" ValueToDisplay="" Hide_if="" />
     </Object>
+    <Object type="ToolboxLibrary.OperatorConsoleButton, Toolbox, Version=13.1.12.1543, Culture=neutral, PublicKeyToken=null" name="operatorConsoleButton4" children="Controls">
+      <Property name="BackColor">104, 131, 139</Property>
+      <Property name="Text">Install VWEL JSWrapper</Property>
+      <Property name="TextImageRelation">ImageBeforeText</Property>
+      <Property name="UseCompatibleTextRendering">True</Property>
+      <Property name="UseVisualStyleBackColor">False</Property>
+      <Property name="DataBindings">
+        <Property name="DefaultDataSourceUpdateMode">OnValidation</Property>
+      </Property>
+      <Property name="Font">Tahoma, 11pt</Property>
+      <Property name="ForeColor">255, 255, 255</Property>
+      <Property name="Location">452, 89</Property>
+      <Property name="Name">operatorConsoleButton4</Property>
+      <Property name="Size">121, 56</Property>
+      <Property name="TabIndex">0</Property>
+      <Parameter Name="Control name" Description="" Type="1" Value="operatorConsoleButton4" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="JavaScript variable" Description="The variable whose value is displayed in this field" Type="1" Value="" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Always use global context" Description="If checked, the variable above will always be retrieved from the Global context" Type="0" Value="1" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Default value" Description="The default value of the Javascript variable" Type="1" Value="" ValueToDisplay="" Hide_if="Variable(JavaScript variable) == Const(&quot;&quot;)" />
+      <Parameter Name="Script" Description="The JavaScript to execute when the button is pressed" Type="31" Value="installVWELWrapper()&#xA;" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Icon" Description="A graphical image file to display in the button" Type="9" Value="" ValueToDisplay="Image Files(*.jpg;*.png;*.bmp;*.ico)|*.jpg;*.png;*.bmp;*.ico||" Hide_if="" />
+      <Parameter Name="Disable when running" Description="the button is disabled whenever a protocol is running" Type="0" Value="1" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Caption" Description="The string to display in the button" Type="1" Value="Install VWEL JSWrapper" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Font size" Description="The point size of the font used to display text in this field" Type="8" Value="11" ValueToDisplay="" Hide_if="">
+        <Ranges>
+          <Range Value="1" />
+          <Range Value="72" />
+        </Ranges>
+      </Parameter>
+      <Parameter Name="Font color" Description="The color of the font used to display text in this field" Type="32" Value="16777215" ValueToDisplay="" Hide_if="" />
+      <Parameter Name="Background color" Description="The color of this button's background" Type="32" Value="9143144" ValueToDisplay="" Hide_if="" />
+    </Object>
     <Object type="ToolboxLibrary.OperatorConsoleButton, Toolbox, Version=13.1.12.1543, Culture=neutral, PublicKeyToken=null" name="operatorConsoleButton3" children="Controls">
       <Property name="BackColor">104, 131, 139</Property>
       <Property name="Text">Clear Screen</Property>
@@ -101,11 +189,11 @@
       <Property name="DataBindings">
         <Property name="DefaultDataSourceUpdateMode">OnValidation</Property>
       </Property>
-      <Property name="Font">Tahoma, 14pt</Property>
+      <Property name="Font">Tahoma, 12pt</Property>
       <Property name="ForeColor">255, 255, 255</Property>
-      <Property name="Location">180, 89</Property>
+      <Property name="Location">325, 90</Property>
       <Property name="Name">operatorConsoleButton3</Property>
-      <Property name="Size">131, 56</Property>
+      <Property name="Size">121, 56</Property>
       <Property name="TabIndex">0</Property>
       <Parameter Name="Control name" Description="" Type="1" Value="operatorConsoleButton3" ValueToDisplay="" Hide_if="" />
       <Parameter Name="JavaScript variable" Description="The variable whose value is displayed in this field" Type="1" Value="" ValueToDisplay="" Hide_if="" />
@@ -115,7 +203,7 @@
       <Parameter Name="Icon" Description="A graphical image file to display in the button" Type="9" Value="" ValueToDisplay="Image Files(*.jpg;*.png;*.bmp;*.ico)|*.jpg;*.png;*.bmp;*.ico||" Hide_if="" />
       <Parameter Name="Disable when running" Description="the button is disabled whenever a protocol is running" Type="0" Value="1" ValueToDisplay="" Hide_if="" />
       <Parameter Name="Caption" Description="The string to display in the button" Type="1" Value="Clear Screen" ValueToDisplay="" Hide_if="" />
-      <Parameter Name="Font size" Description="The point size of the font used to display text in this field" Type="8" Value="14" ValueToDisplay="" Hide_if="">
+      <Parameter Name="Font size" Description="The point size of the font used to display text in this field" Type="8" Value="12" ValueToDisplay="" Hide_if="">
         <Ranges>
           <Range Value="1" />
           <Range Value="72" />
