@@ -7,7 +7,7 @@
 ///</Velocity11>
 
 function VWorksExtLib() {
-    print("VWorks Extension Library Loaded (JS Wrapper version)");
+    print("This is the VWorks Extension Library (JS Wrapper version)");
 }
 
 function getVWorksExtLibVersion() {
@@ -34,9 +34,8 @@ function getVWorksExtLibVersion() {
 // Note that if getVWorksExtLibRoot exists it must return "something" 
 // starting with "C:/VWorks Workspace/" (any casing). 
 var getVWorksExtLibRoot  = (typeof getVWorksExtLibRoot === "function" &&  
-							getVWorksExtLibRoot().toLowerCase().replace(/\\/g,"/").indexOf("c:/vworks workspace/")===0 && 
-							getVWorksExtLibRoot) || 
-	function () {return "C:/VWorks Workspace/VWorksExtLib/"}
+					getVWorksExtLibRoot().toLowerCase().replace(/\\/g,"/").indexOf("c:/vworks workspace/")===0) || 
+				function () {return "C:/VWorks Workspace/VWorksExtLib/"}
 
 // ------------------------------------------------------------------------------
 
