@@ -17,7 +17,7 @@ if (f.Exists(VWELToUse)) {
     $print("*** Using VWorksExtLib.js at:\n" + VWELToUse);
     $print("VWEL Version: " + getVWorksExtLibVersion());
     rootPath = getVWorksExtLibRoot() + "Tests/";
-    codelist = f.readFolder(rootPath,"*.js").filter(function (fn){return fn!=="Master.js"}).join(";");
+    codelist = f.readFolder(rootPath,"*.js").filter(function (fn){return fn.toLowerCase()!=="master.js"}).join(";");
 }
 else {
     codelist = "*** VWorksExtLib.js not found!";
