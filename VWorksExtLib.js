@@ -12,7 +12,7 @@ function VWorksExtLib() {
 
 function getVWorksExtLibVersion() {
 	// Update this when releasing new versions!
-	return "1.0.0";
+	return "1.0.1";
 }
 
 // VWorksExtLib  - VWorks Extension Library
@@ -743,30 +743,29 @@ function atob (inStr) {
 
 // ======================= OTHER FUNCTIONS ======================================
 
-/*
-This function solves the problem of processing "nUnits" of something when the available maximum capacity is "maxCapacity" 
-and each unit needs to use "someCapacity". The function will return the "best" number of cycles needed to complete the action  
-and the number of units that will be processed in each cycle. "Best" here is intented as the one that makes the resulting 
-processed units per cycles as similar as possible.  
-Possible uses: 
-1. filling "nUnits" columns (with multidispense), each with "someCapacity" uL using tips having a max volume of "maxCapacity" uL.
-2. processing "nUnits" plates stored in a stacker when the available space on the Bravo amounts to "maxCapacity" locations 
-and one needs to know how many plates to use in each cycle. In case one has 3 locations available maxCapacity=3 and someCapacity=1.  
-The function returns an object whose propertes are "nCycles" (integer) and "unitsPerCycle" (array of integers of length nCycles).
-
-Test #1: get 16 plates in groups of 3 on the Bravo:
-print("=== Test with number of plates")
-pTest = {nUnits: 16,maxCapacity: 3,someCapacity: 1}
-pRes = doActionInCycles(pTest)
-print("nUnits = " + pTest.nUnits + " nCycles = " + pRes.nCycles + " unitsPerCycle = " + pRes.unitsPerCycle)
---> nUnits = 16 nCycles = 6 unitsPerCycle = 3,3,3,3,2,2 (note that it is *not* 3,3,3,3,3,1)
-Test #2: calculate how to multidispense 30 uL to 9 columns using filtered tips whose max volume is 180 uL:
-print("=== Test with multidispense")
-vTest = {nUnits: 9,maxCapacity: 180,someCapacity: 30}
-vRes = doActionInCycles(vTest)
-print("nUnits = " + vTest.nUnits + " nCycles = " + vRes.nCycles + " unitsPerCycle = " + vRes.unitsPerCycle)
---> nUnits = 9 nCycles = 2 unitsPerCycle = 5,4 (*not* 6,3)
-*/
+// *** DEPRECATED function *** - use distributeUnitsEvenly() directly instead.
+// Kept for backward compatibility.
+// This function solves the problem of processing "nUnits" of something when the available maximum capacity is "maxCapacity" 
+// and each unit needs to use "someCapacity". The function will return the "best" number of cycles needed to complete the action  
+// and the number of units that will be processed in each cycle. "Best" here is intented as the one that makes the resulting 
+// processed units per cycles as similar as possible.  
+// Possible uses: 
+// 1. filling "nUnits" columns (with multidispense), each with "someCapacity" uL using tips having a max volume of "maxCapacity" uL.
+// 2. processing "nUnits" plates stored in a stacker when the available space on the Bravo amounts to "maxCapacity" locations 
+// and one needs to know how many plates to use in each cycle. In case one has 3 locations available maxCapacity=3 and someCapacity=1.  
+// The function returns an object whose propertes are "nCycles" (integer) and "unitsPerCycle" (array of integers of length nCycles).
+// Test #1: get 16 plates in groups of 3 on the Bravo:
+// print("=== Test with number of plates")
+// pTest = {nUnits: 16,maxCapacity: 3,someCapacity: 1}
+// pRes = doActionInCycles(pTest)
+// print("nUnits = " + pTest.nUnits + " nCycles = " + pRes.nCycles + " unitsPerCycle = " + pRes.unitsPerCycle)
+// --> nUnits = 16 nCycles = 6 unitsPerCycle = 3,3,3,3,2,2 (note that it is *not* 3,3,3,3,3,1)
+// Test #2: calculate how to multidispense 30 uL to 9 columns using filtered tips whose max volume is 180 uL:
+// print("=== Test with multidispense")
+// vTest = {nUnits: 9,maxCapacity: 180,someCapacity: 30}
+// vRes = doActionInCycles(vTest)
+// print("nUnits = " + vTest.nUnits + " nCycles = " + vRes.nCycles + " unitsPerCycle = " + vRes.unitsPerCycle)
+// --> nUnits = 9 nCycles = 2 unitsPerCycle = 5,4 (*not* 6,3)
 function doActionInCycles (o) {
 	var props = ["someCapacity","nUnits","maxCapacity"];
 	if (typeof(o) !== "object") {
@@ -780,18 +779,39 @@ function doActionInCycles (o) {
 		}
 	}
 	var someCapacity = o.someCapacity, nUnits = o.nUnits, maxCapacity = o.maxCapacity;
-	var nCycles = 1, remCycles, unitsPerCycle = [], addCycle;
-	if (someCapacity > maxCapacity) {
-		print("It must be someCapacity <= maxCapacity");
+	return distributeUnitsEvenly(nUnits, someCapacity, maxCapacity);
+}
+
+// ------------------------------------------------------------------------------
+
+// This function distributes nUnits into cycles so that:
+// 1. each cycle processes an integer number of units	
+// 2. no cycle exceeds cycleCapacity when processing its units
+// 3. the number of units processed in each cycle is as similar as possible
+// Returns an object with properties:
+// nCycles: integer, number of cycles needed
+// unitsPerCycle: array of integers, number of units processed in each cycle
+// If input arguments are invalid, it returns false.
+function distributeUnitsEvenly (nUnits, unitCapacity, cycleCapacity) {
+	var nUnits = parseInt(nUnits);
+	var unitCapacity = parseFloat(unitCapacity);
+	var cycleCapacity = parseFloat(cycleCapacity);
+	if (isNaN(nUnits) || isNaN(unitCapacity) || isNaN(cycleCapacity) || nUnits < 2 || unitCapacity <= 0 || cycleCapacity <= 0) {		
+		print("distributeUnitsEvenly: bad input argument(s)");
+		return false;
+	}	
+	var maxUnitsPerCycle = Math.floor(cycleCapacity / unitCapacity);
+	if (maxUnitsPerCycle < 1) {
+		print("distributeUnitsEvenly: unitCapacity exceeds cycleCapacity");
 		return false;
 	}
-	while (someCapacity*Math.ceil(nUnits/nCycles) > maxCapacity) nCycles++;
-	remCycles = nUnits - nCycles*Math.floor(nUnits/nCycles);
-	for (i=0; i<nCycles; i++) {
-		addCycle = (i < remCycles) ? 1 : 0;
-		unitsPerCycle.push(addCycle + Math.floor(nUnits/nCycles));
-	}
-		
+	var nCycles = Math.ceil(nUnits / maxUnitsPerCycle);	
+	var baseUnitsPerCycle = Math.floor(nUnits / nCycles);
+	var cyclesWithExtraUnit = nUnits % nCycles;
+	var unitsPerCycle = [].concat(
+		Array(cyclesWithExtraUnit).fill(baseUnitsPerCycle + 1),
+		Array(nCycles - cyclesWithExtraUnit).fill(baseUnitsPerCycle)
+	);
 	return {nCycles: nCycles, unitsPerCycle: unitsPerCycle};
 }
 
@@ -800,7 +820,6 @@ function doActionInCycles (o) {
 // This function returns the wellselection array corresponding to a certain well address.
 // If a well address does not belong to the chosen format ("platetype"), it returns false.
 function getWellselection (well,plateType) {
-	// 2023-01-23 v 1.0
 	var filterSpaces = /[^A-Z0-9]/g;
 	var filterType = /^(6|12|24|48|54|96|384|1536)$/;
 	var filter2Letters = /^[A-Z]{2}/;
@@ -976,7 +995,6 @@ function Signal (dontReset) {
 // External file will take precedence over prefix. 
 // The form variables are supposed to be in the global context and will be stored 
 // in the global context when read from the JSON file. 
-
 function MethodManager (path, prefix, fileExt, varFile) {
 	if (typeof JSON.stringify !== "function" || typeof JSON.parse !== "function") {
 		alert();
