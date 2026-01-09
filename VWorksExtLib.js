@@ -34,7 +34,8 @@ function getVWorksExtLibVersion() {
 // Note that if getVWorksExtLibRoot exists it must return "something" 
 // starting with "C:/VWorks Workspace/" (any casing). 
 var getVWorksExtLibRoot  = (typeof getVWorksExtLibRoot === "function" &&  
-					getVWorksExtLibRoot().toLowerCase().replace(/\\/g,"/").indexOf("c:/vworks workspace/")===0) || 
+				getVWorksExtLibRoot().toLowerCase().replace(/\\/g,"/").indexOf("c:/vworks workspace/")===0 &&
+				getVWorksExtLibRoot) || 
 				function () {return "C:/VWorks Workspace/VWorksExtLib/"}
 
 // ------------------------------------------------------------------------------
