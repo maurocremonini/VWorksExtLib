@@ -746,6 +746,7 @@ function atob (inStr) {
 
 // *** DEPRECATED function *** - use distributeUnitsEvenly() directly instead.
 // Kept for backward compatibility.
+//
 // This function solves the problem of processing "nUnits" of something when the available maximum capacity is "maxCapacity" 
 // and each unit needs to use "someCapacity". The function will return the "best" number of cycles needed to complete the action  
 // and the number of units that will be processed in each cycle. "Best" here is intented as the one that makes the resulting 
@@ -815,6 +816,29 @@ function distributeUnitsEvenly (nUnits, unitCapacity, cycleCapacity) {
 	);
 	return {nCycles: nCycles, unitsPerCycle: unitsPerCycle};
 }
+
+// ------------------------------------------------------------------------------
+
+// This function calculates how to distribute some capacity evenly over nUnits
+// when each unit needs unitCapacity and the maximum capacity per cycle is cycleCapacity.
+// decDigits: number of decimal digits for capacityPerCycle (default: 1).
+// It returns an object with properties:	
+// nCycles: integer, number of cycles needed
+// capacityPerCycle: float, capacity to be used for each unit in each cycle
+// If input arguments are invalid, it returns false.
+function distributeCapacityEvenly (nUnits, unitCapacity, cycleCapacity, decDigits) {
+	var decDigits = (decDigits === undefined) ? 1 : Math.abs(parseInt(decDigits));
+	var nUnits = parseInt(nUnits);
+	var unitCapacity = parseFloat(unitCapacity);
+	var cycleCapacity = parseFloat(cycleCapacity);
+	if (isNaN(nUnits) || isNaN(unitCapacity) || isNaN(cycleCapacity) || nUnits < 2 || unitCapacity <= 0 || cycleCapacity <= 0) {		
+		print("distributeCapacityEvenly: bad input argument(s)");
+		return false;
+	}	
+	var nCycles = Math.ceil((nUnits * unitCapacity) / cycleCapacity);
+	var capacityPerCycle = Math.roundTo(unitCapacity / nCycles, decDigits);
+	return {nCycles: nCycles, capacityPerCycle: capacityPerCycle};
+} 
 
 // ------------------------------------------------------------------------------
 
