@@ -637,6 +637,14 @@ File.prototype.readFile = function () {
 
 // ------------------------------------------------------------------------------
 
+// This method checks if the file set in the property filename exists. Returns true or false.
+File.prototype.existsFile = function () {
+	if (!this.filename) {print("existsFile: set the filename property first."); return false};
+	return this.Exists(this.filename);
+}
+
+// ------------------------------------------------------------------------------
+
 // This method saves "content" to this.filename (overwriting the file!).
 // If content is an array then the separator "sep" is used to separate the elements of the array
 // and "\n" is added at the end.
