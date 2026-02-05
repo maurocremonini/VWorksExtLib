@@ -1,5 +1,5 @@
 ///<?xml version='1.0' encoding='ASCII' ?>
-///<Velocity11 file='MetaData' md5sum='00000000000000000000000000000000' version='1.0'>
+///<Velocity11 file='MetaData' md5sum='00000000000000000000000000000000' version='1.1.0'>
 ///<Command Compiler='1' Description='VWorks Extension Library' Editor='-1' Name='VWorksExtLib'>
 ///	<Parameters>
 ///	</Parameters>
@@ -12,7 +12,7 @@ function VWorksExtLib() {
 
 function getVWorksExtLibVersion() {
 	// Update this when releasing new versions!
-	return "1.0.1";
+	return "1.1.0";
 }
 
 // VWorksExtLib  - VWorks Extension Library
@@ -33,9 +33,8 @@ function getVWorksExtLibVersion() {
 // VWorksExtLib.js, no redefinition will take plate. 
 // Note that if getVWorksExtLibRoot exists it must return "something" 
 // starting with "C:/VWorks Workspace/" (any casing). 
-var getVWorksExtLibRoot  = (typeof getVWorksExtLibRoot === "function" &&  
-				getVWorksExtLibRoot().toLowerCase().replace(/\\/g,"/").indexOf("c:/vworks workspace/")===0 &&
-				getVWorksExtLibRoot) || 
+var getVWorksExtLibRoot  = (getVWorksExtLibRoot && typeof getVWorksExtLibRoot === "function" &&  
+				getVWorksExtLibRoot().toLowerCase().replace(/\\/g,"/").indexOf("c:/vworks workspace/")===0) || 
 				function () {return "C:/VWorks Workspace/VWorksExtLib/"}
 
 // ------------------------------------------------------------------------------
@@ -633,6 +632,14 @@ File.prototype.readFile = function () {
 	this.content = this.Read();
 	this.Close();
 	return this.content;
+}
+
+// ------------------------------------------------------------------------------
+
+// This method checks if the file set in the property filename exists. Returns true or false.
+File.prototype.existsFile = function () {
+	if (!this.filename) {print("existsFile: set the filename property first."); return false};
+	return this.Exists(this.filename);
 }
 
 // ------------------------------------------------------------------------------
