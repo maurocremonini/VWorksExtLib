@@ -12,7 +12,7 @@ function VWorksExtLib() {
 
 function getVWorksExtLibVersion() {
 	// Update this when releasing new versions!
-	return "1.1.0";
+	return "1.2.0";
 }
 
 // VWorksExtLib  - VWorks Extension Library
@@ -600,6 +600,54 @@ String.prototype.toForwardSlashes = function () {
 // remove all \r, \n at the beginning of a lines and (\r)\n at end of content
 String.prototype.stripEmptyLines = function () { 
 	return this.replace(/\r/g,"").replace(/^\n/gm,"").replace(/[^\S\n\r]*\r?\n$/, "");
+}
+
+// ------------------------------------------------------------------------------
+
+// This method is similar to Python's str.format() method. 
+// It replaces placeholders in the string with the relevant content provided as arguments.
+// Placeholders can be of three types:
+// 1. {} - in this case the content is taken from the arguments in order (first {} is replaced with first argument, etc.).
+// 2. {<number>} - in this case the content is taken from the argument with the relevant index 
+// 		(e.g. {0} is replaced with first argument, etc.). In case the first argument is an array then the content is taken 
+// 		from the array element with the relevant index.  
+// 3. {<label>} - in this case the content is taken from the property of an object passed as the first argument 
+// 		(e.g. if the first argument is {name: "John", age: 30} then {name} is replaced with "John" and {age} with 30).
+// To print a literal { or } use {{ and }}, respectively.
+String.prototype.format = function () {
+    // turn function arguments into a real array
+    var argLen = arguments.length, argCpy = [];
+    for (var i = 0; i < argLen; i++) argCpy.push(arguments[i]); 
+    // matches {...} only if surrounded by an even number of braces.
+    var re1 = /(^|[^{])(\{\{)*(\{[^{}]*\})(\}\})*(?!\})/g;
+    var str = this, match;
+    // match and replace placeholder with relevant content
+    //1: {}, 2: {<number>}, 3: {<label>} or {<number>} if first argument is JS array
+    var startType = 0; type = 0 
+    var fullMatch, fullMatch2, placeHolder, replacement;
+    while ((match = re1.exec(str))!== null) {
+        placeHolder = match[3];        
+        type = placeHolder === "{}" ? 1 : (/\{\d+\}/.test(placeHolder) ? 2 : 3);
+        startType = startType || type;
+        if (type !== startType) {print("*** format placeholder mismatch."); return this;} 
+        if (type === 3 && typeof argCpy[0]!=="object") {
+            print("*** format argument[0] must be an object when using labels."); 
+            return this;
+        }
+        if (type===2 && typeof argCpy[0]==="object") type = 3; // so arrays in arguments[0] are allowed
+        fullMatch = (match[2]||"") + placeHolder + (match[4]||"");
+        if (type===1) {
+            replacement = argCpy.shift();
+        } else if (type===2) {
+            replacement = argCpy[placeHolder.replace(/[{}]/g,"")];
+        } else if (type===3) {
+            replacement = argCpy[0][placeHolder.replace(/[{}]/g,"")];
+        };
+        fullMatch2 = fullMatch.replace(placeHolder, replacement.toString() || "");
+        str = str.slice(0,match.index)+str.slice(match.index).replace(fullMatch, fullMatch2)
+        re1.lastIndex = re1.lastIndex - 1 - (fullMatch.length-fullMatch2.length); 
+    }
+    return str.replace(/\{\{/g,"{").replace(/\}\}/g,"}");
 }
 
 // ======================= NEW METHODS FOR THE MATH OBJECT ==================
