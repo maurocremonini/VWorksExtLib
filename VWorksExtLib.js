@@ -644,7 +644,7 @@ String.prototype.format = function () {
         } else if (type===3) {
             replacement = argCpy[0][placeHolder.replace(/[{}]/g,"")];
         };
-        fullMatch2 = fullMatch.replace(placeHolder, replacement.toString() || "");
+        fullMatch2 = fullMatch.replace(placeHolder, String(replacement));
         str = str.slice(0,match.index)+str.slice(match.index).replace(fullMatch, fullMatch2)
         re1.lastIndex = re1.lastIndex - 1 - (fullMatch.length-fullMatch2.length); 
     }
