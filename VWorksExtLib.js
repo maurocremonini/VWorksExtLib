@@ -620,6 +620,7 @@ String.prototype.format = function () {
     for (var i = 0; i < argLen; i++) argCpy.push(arguments[i]); 
     // matches {...} only if surrounded by an even number of braces.
     var re1 = /(^|[^{])(\{\{)*(\{[^{}]*\})(\}\})*(?!\})/g;
+	re1.lastIndex = 0; 
     var str = this, match;
     // match and replace placeholder with relevant content
     //1: {}, 2: {<number>}, 3: {<label>} or {<number>} if first argument is JS array
@@ -629,9 +630,9 @@ String.prototype.format = function () {
         placeHolder = match[3];        
         type = placeHolder === "{}" ? 1 : (/\{\d+\}/.test(placeHolder) ? 2 : 3);
         startType = startType || type;
-        if (type !== startType) {print("*** format placeholder mismatch."); return this;} 
+        if (type !== startType) {print("*** format: placeholder mismatch."); return this;} 
         if (type === 3 && typeof argCpy[0]!=="object") {
-            print("*** format argument[0] must be an object when using labels."); 
+            print("*** format: argument[0] must be an object when using named placeholders."); 
             return this;
         }
         if (type===2 && typeof argCpy[0]==="object") type = 3; // so arrays in arguments[0] are allowed
