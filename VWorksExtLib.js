@@ -604,16 +604,18 @@ String.prototype.stripEmptyLines = function () {
 
 // ------------------------------------------------------------------------------
 
-// This method is similar to Python's str.format() method. 
-// It replaces placeholders in the string with the relevant content provided as arguments.
-// Placeholders can be of three types:
-// 1. {} - in this case the content is taken from the arguments in order (first {} is replaced with first argument, etc.).
-// 2. {<number>} - in this case the content is taken from the argument with the relevant index 
-// 		(e.g. {0} is replaced with first argument, etc.). In case the first argument is an array then the content is taken 
-// 		from the array element with the relevant index.  
-// 3. {<label>} - in this case the content is taken from the property of an object passed as the first argument 
-// 		(e.g. if the first argument is {name: "John", age: 30} then {name} is replaced with "John" and {age} with 30).
-// To print a literal { or } use {{ and }}, respectively.
+// This is a simplified version of the Python's str.format() method. 
+// It replaces placeholders in a string with the relevant content provided as arguments.
+// There are three types of placeholders:
+// 1. empty placeholders: {} - the content is taken from the arguments in order
+//      (first {} is replaced with first argument, etc.).
+// 2. indexed placeholders: {<number>} - the content is taken from the argument with the relevant index 
+//      (e.g. {0} is replaced with first argument, etc.). In case the first argument is an array then the 
+//      content is taken from the array element with the relevant index.  
+// 3. named placeholders: {<label>} - the content is taken from the property of an object passed as the 
+// 		first argument (e.g. if the first argument is {name: "John", age: 30} then {name} is replaced with 
+// 		"John" and {age} with 30).
+// To print a literal { or } use {{ or }}, respectively.
 String.prototype.format = function () {
     // turn function arguments into a real array
     var argLen = arguments.length, argCpy = [];
