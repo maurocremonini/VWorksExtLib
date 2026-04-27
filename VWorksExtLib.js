@@ -31,19 +31,25 @@ function getVWorksExtLibVersion() {
 // This function returns the root folder for VWorksExtLib.
 // If getVWorksExtLibRoot() is defined in the relevant context before open()ing 
 // VWorksExtLib.js, no redefinition will take plate. 
-// Note that if getVWorksExtLibRoot exists it must return "something" 
-// starting with "C:/VWorks Workspace/" (any casing). 
+// Note that the folder returned by getVWorksExtLibRoot cannot be in the OL system.  
 var getVWorksExtLibRoot  = (getVWorksExtLibRoot && typeof getVWorksExtLibRoot === "function" &&  
-				getVWorksExtLibRoot().toLowerCase().replace(/\\/g,"/").indexOf("c:/vworks workspace/")===0) ?
-				getVWorksExtLibRoot : 
+				!isFolderOL(getVWorksExtLibRoot())) ? getVWorksExtLibRoot : 
 				function () {return "C:/VWorks Workspace/VWorksExtLib/"}
+				
+// ------------------------------------------------------------------------------
+
+// Returns the folder used for storing VWEL temporary files. 
+function getVWorksExtLibTemp () {
+	return getVWorksExtLibRoot() + "Temp/";
+}
 
 // ------------------------------------------------------------------------------
 
-// This function returns true if run on VWorks 14.x and false otherwise.
-function isVWorks14() {
+// This function returns true if run on VWorks OpenLab and false otherwise.
+function isVWorksOL() {
 	return (typeof IsCompliantMode === "function");
 }
+isVWorks14 = isVWorksOL // added for backward compatbility
 
 // ------------------------------------------------------------------------------
 
@@ -65,8 +71,16 @@ function isWSArray(a) {
 
 // ------------------------------------------------------------------------------
 
+// This function returns true if the folder belongs to the OL shared services system. 
+function isFolderOL(folder) {
+	return folder.toLowerCase().trim().indexOf("[olssvr]")===0;
+}  
+
+// ------------------------------------------------------------------------------
+
 // This function uses "mkdir" to create a folder if not existent.
 function ensureFolderExists (folder) {
+	if (isFolderOL(folder)) {print("Can't use ensureFolderExists with OL folder."); return false};
 	var folder = folder.toBackSlashes();
 	var f = new File();
 	var cmd = "cmd /c mkdir \"" + folder + "\"";
@@ -74,7 +88,7 @@ function ensureFolderExists (folder) {
 		print("Creating " + folder);
 		run(cmd, true);
 	}
-	return;
+	return true;
 }
 
 // ------------------------------------------------------------------------------
@@ -153,7 +167,7 @@ function msgBox (msg, title, buttons, type) {
 	// YesNoCancel	3 		Question	32	 	
 	// YesNo		4		Warning		48	 	
 	// 						Information	64	 	 
-	var msgBoxFile = (getVWorksExtLibRoot() + "MsgBox/response.txt").toBackSlashes();
+	var msgBoxFile = (getVWorksExtLibTemp() + "MsgBox/response.txt").toBackSlashes();
 	ensureFolderExists(msgBoxFile.dirname());
     var sQuote = function (s) {return "'" + s + "'"};
 	var escDQuote = function (s) {return "\\\"" + s + "\\\""};
@@ -669,17 +683,17 @@ Math.roundTo = function (x, d) {
 
 // fn: filepath, forwardSlashes: changes backslashes to forward slashes (useful for VWorks 14.x).
 // The filename is set in the "filename" property.
-File.prototype.setFilename = function (fn, forwardSlashes) {
+File.prototype.setFilename = function (fn, convertToForwardSlashes) {
 	if (!fn) {print("setFilename: no filename provided."); return false};
-	this.filename = forwardSlashes ?  fn.toForwardSlashes() : fn;
+	this.filename = convertToForwardSlashes ?  fn.toForwardSlashes() : fn;
 }
 
 // ------------------------------------------------------------------------------
 
 // This method reads the content of the file and stores it in the "content" property
 File.prototype.readFile = function () {
-	if (!this.filename) {print("readFileContent: set the filename property first."); return false};
-	if (!this.Exists(this.filename)) {alert(); print("readFileContent: file not found."); return false};
+	if (!this.filename) {print("readFile: set the filename property first."); return false};
+	if (!this.Exists(this.filename)) {alert(); print("readFile: file not found."); return false};
 	this.Open(this.filename);
 	this.content = this.Read();
 	this.Close();
@@ -700,12 +714,25 @@ File.prototype.existsFile = function () {
 // If content is an array then the separator "sep" is used to separate the elements of the array
 // and "\n" is added at the end.
 // "suppressCRLF" is passed to Open() as third argument. 
-File.prototype.writeFile = function (content, sep, suppressCRLF) {
-	if (!this.filename) {alert(); print("writeToFile: set the filename first."); return false}; 
-	var txt = isArray(content) ? content.join(sep) + "\n" : content;
-	this.Open(this.filename, true, suppressCRLF);
-	this.Write(txt);
-	this.Close();
+File.prototype.writeFile = function (content, sep, suppressCRLF, appendFlag) {
+	if (!this.filename) {alert(); print("writeFile: set the filename first."); return false}; 
+	var sep1 = isArray(sep) ? sep[0] : sep;
+	var sep2 = isArray(sep) ? sep[1] : "\n";
+	var txt = isArray(content) ? content.join(sep1) + sep2 : content;
+	if (isFolderOL(this.filename) && isVWorksOL()) {
+		var vw14TempFolder = getVWorksExtLibTemp() + "writeFileTemp/"; 
+		ensureFolderExists(vw14TempFolder);
+		var vw14TempFile = vw14TempFolder + this.filename.basename();
+		if (appendFlag && this.existsFile()) DownloadFromStorage(this.filename, vw14TempFolder)
+		this.Open(vw14TempFile, !appendFlag, suppressCRLF); 
+		this.Write(txt);
+		this.Close();
+		UploadToStorage(vw14TempFile, this.filename, "Uploaded by VWEL", true)	
+	} else {
+		this.Open(this.filename, !appendFlag, suppressCRLF); 
+		this.Write(txt);
+		this.Close();
+	}
 	this.readFile();
 	return true;
 }
@@ -715,24 +742,36 @@ File.prototype.writeFile = function (content, sep, suppressCRLF) {
 // This method appends "content" to this.filename.
 // See "writeFile" for the meaning of the parameters.
 File.prototype.appendFile = function (content, sep, suppressCRLF) {
-	if (!this.filename) {alert(); print("writeToFile: set the filename first."); return false}; 
-	var txt = isArray(content) ? content.join(sep) + "\n" : content;
-	this.Open(this.filename, false, suppressCRLF);
-	this.Write(txt);
-	this.Close();
-	this.readFile();
-	return true;
+	return this.writeFile(content, sep, suppressCRLF, true);
 }
 
 // ------------------------------------------------------------------------------
 
 // This method first reads the content of this.filename and then stores it in the 
-// filepath "fn2". If fn2 exists and overwrite is false, no copy will happen. 
-File.prototype.copyFile = function (fn2, overwrite) {
-	if (!this.filename) {alert(); print("copyFile: set the filename first."); return false};
-	if (!overwrite && this.Exists(fn2)) {alert(); print("copyFile: target file exists. Can't copy."); return false};
-	var cmd = "cmd /c copy /Y \"" + this.filename.toBackSlashes() + "\" \"" + fn2.toBackSlashes() + "\"";
-	run(cmd, true)
+// filepath "fn2". If noBackup is false and overwrite is set a backup copy of the target 
+// will be created in the target folder.  
+File.prototype.copyFile = function (fn2, overwrite, noBackup) {
+	if (!this.filename) {print("copyFile: set the source filename first."); return false};
+	if (!fn2) {print("copyFile: no target filename provided."); return false};
+	if (!isVWorksOL() & (isFolderOL(this.filename) || isFolderOL(fn2))) {print("copyFile: not an OpenLab system."); return false};
+	var contentSource = this.readFile();
+	var fn1 = this.filename;
+	if (this.Exists(fn2)){
+		if (!overwrite) {print("copyFile: target file exists. Can't copy."); return false}		
+		else if (overwrite && !noBackup) {
+			var ext = fn2.extname();
+			var bn = fn2.basename(ext);
+			var dn = fn2.dirname();
+			var fnBk = dn + "/" + bn + getTimeStamp("_YYYYMMDDhhmmss") + (ext ? ("." + ext) : "");
+			this.filename = fn2;
+			var contentTarget = this.readFile(); 
+			this.filename = fnBk;
+			this.writeFile(contentTarget);
+		};
+	}
+	this.filename = fn2;
+	this.writeFile(contentSource);
+	this.filename = fn1;
 	return true;
 }
 
@@ -741,6 +780,7 @@ File.prototype.copyFile = function (fn2, overwrite) {
 // Delete file (added for naming consistency) 
 File.prototype.deleteFile = function (fn) {
 	if (!this.Exists(fn)) {alert(); print("deleteFile: file not found."); return false};
+	if (isFolderOL(fn)) {print("Can't use deleteFile with OL folder."); return false};
 	this.Delete(fn);
 	return true;
 };
@@ -754,6 +794,7 @@ File.prototype.deleteFile = function (fn) {
 // outFile: (generally not required) a temporary file in <folder>
 File.prototype.readFolder = function (folder, pattern, outFile)  {
 	if (!folder) {alert(); print("readFolder: no folder provided."); return false};
+	if (isFolderOL(folder)) {print("Can't use readFolder with OL folder."); return false};
 	var pattern = pattern || "*.*";
 	var outFile = outFile || "__readFolder";
 	var dosFolder = folder.toBackSlashes();
@@ -948,8 +989,7 @@ function plateInfo (plateName) {
 					tipCapacity: "TIP_CAPACITY"};
 	print("Retrieving parameters for labware entry \"" + plateName + "\"");
 	// Create PlateInfo work folder.
-	// *** C:/VWorks Workspace must be user writable (usually, it is).
-	var outPath = "C:/VWorks Workspace/Temp/PlateInfo/";
+	var outPath = getVWorksExtLibTemp() + "PlateInfo/";
 	ensureFolderExists(outPath);
 	var f = new File();
 	if (isVWorks14()) { 
@@ -1041,32 +1081,31 @@ function Signal (dontReset) {
 // This is a contructor that returns an object with a method "log" 
 // that adds a line to a custom log file, creating the path if not existent. 
 // If fileOrTask is the "task" object then the output file is automatically set to
-// C:\VWorks Workspace\CustomLogs\<protocol name>_out.txt.
+// <VWEL temp folder>\CustomLogs\<protocol name>_out.txt.
 // In the log method, if txtLine is an array its elements are automatically join()'ed with the selected separator. 
  function CustomLog (fileOrTask, sep) {
 	var sep = sep || "\t";
 	var fileName = "", f = new File();
 	if (typeof fileOrTask === "object") {
 		if (typeof fileOrTask.getProtocolName === "function") {
-			var tmp = fileOrTask.getProtocolName().replace(/\\/g,"/").split("/").pop();
+			var tmp = fileOrTask.getProtocolName().toForwardSlashes().split("/").pop();
 			tmp = (tmp.split("."))[0];
-			ensureFolderExists("C:/VWorks Workspace/CustomLogs/");
-			fileName = "C:/VWorks Workspace/CustomLogs/" + tmp + "_out.txt";
+			fileName = getVWorksExtLibTemp() + "CustomLogs/" + tmp + "_out.txt";
+			ensureFolderExists(fileName.dirname());
 		}
 		else {
 			print("customLog: no getProtocolName() method in passed object. Is it a \"task\" object?"); 
 			return;
 		}
 	}
-	fileName = (fileName || fileOrTask).toString().replace(/\\/g,"/");
+	fileName = (fileName || fileOrTask).toString().toForwardSlashes();
 	if (!fileName) {print("CustomLog: no fileName provided."); return false};
 	if (fileName.indexOf("/") === -1) {print("CustomLog: complete file path needed."); return};
 	var path = (fileName.split("/")).slice(0,-1).join("/");
 	ensureFolderExists(path);
 	this.log = function (txtLine, overwrite) {
-		f.Open(fileName, overwrite);
-		f.Write((isArray(txtLine) ? txtLine.join(sep) : txtLine) + "\n");
-		f.Close();
+		f.filename = fileName;
+		overwrite ? f.writeFile(txtLine, sep) : f.appendFile(txtLine, sep); 
 	}
  }
 
@@ -1789,5 +1828,6 @@ if (typeof JSON !== "object") {
 
 print("*** Public domain json2.js successfully loaded ***");
 print("VWEL root path is " + getVWorksExtLibRoot());
-ensureFolderExists(getVWorksExtLibRoot());
+print("VWEL temp path is " + getVWorksExtLibTemp());
+ensureFolderExists(getVWorksExtLibTemp());
 print("VWEL JSWrapper version is " + getVWorksExtLibVersion());
