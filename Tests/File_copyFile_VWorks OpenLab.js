@@ -19,4 +19,6 @@
     myFile.copyFile(filename2, true)
     // copy from OLSS to HDD overwriting with backup
     myFile.copyFile(filename2, true)
+    $print("Now manually check that the files are in the relevant folders.")
+    
     
